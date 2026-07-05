@@ -13,13 +13,15 @@ async function fetchAll() {
     ...(jwt ? { Cookie: `jwt=${jwt}` } : {}),
   }
 
+  const safe = (r: Response) => r.ok ? r.json() : []
+
   const [fontes, rituais, poderes, origens, usuarios, roles] = await Promise.all([
-    fetch(`${API}/fontes`, { cache: 'no-store' }).then((r) => r.json()).catch(() => []),
-    fetch(`${API}/rituais`, { cache: 'no-store' }).then((r) => r.json()).catch(() => []),
-    fetch(`${API}/poderes`, { cache: 'no-store' }).then((r) => r.json()).catch(() => []),
-    fetch(`${API}/origens`, { cache: 'no-store' }).then((r) => r.json()).catch(() => []),
-    fetch(`${API}/auth/users`, { cache: 'no-store', headers: authHeaders }).then((r) => r.json()).catch(() => []),
-    fetch(`${API}/roles`, { cache: 'no-store', headers: authHeaders }).then((r) => r.json()).catch(() => []),
+    fetch(`${API}/fontes`, { cache: 'no-store' }).then(safe).catch(() => []),
+    fetch(`${API}/rituais`, { cache: 'no-store' }).then(safe).catch(() => []),
+    fetch(`${API}/poderes`, { cache: 'no-store' }).then(safe).catch(() => []),
+    fetch(`${API}/origens`, { cache: 'no-store' }).then(safe).catch(() => []),
+    fetch(`${API}/auth/users`, { cache: 'no-store', headers: authHeaders }).then(safe).catch(() => []),
+    fetch(`${API}/roles`, { cache: 'no-store', headers: authHeaders }).then(safe).catch(() => []),
   ])
   return { fontes, rituais, poderes, origens, usuarios, roles }
 }

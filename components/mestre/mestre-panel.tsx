@@ -765,6 +765,7 @@ function UsuariosTab({ usuarios: initial, roles, currentUserId }: { usuarios: Us
           console.info('[mestre-panel] Chamando createUsuario com:', form)
           await createUsuario(data)
           console.info('[mestre-panel] Usuário criado com sucesso, atualizando estado')
+          setUsuarios((prev) => [...prev, {
             id: Date.now(), name: data.name, surname: data.surname ?? null, email: data.email,
             roleId: data.roleId ?? null,
             roleName: roles.find((r) => r.id === data.roleId)?.name ?? null,

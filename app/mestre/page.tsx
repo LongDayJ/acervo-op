@@ -14,14 +14,20 @@ async function fetchAll() {
   }
 
   const safe = (r: Response) => r.ok ? r.json() : []
+  const safeLog = async (r: Response, label: string) => {
+    if (r.ok) return r.json()
+    const body = await r.text().catch(() => '')
+    console.error(`[fetchAll] ${label} ${r.status}`, body.slice(0, 200))
+    return []
+  }
 
   const [fontes, rituais, poderes, origens, usuarios, roles] = await Promise.all([
     fetch(`${API}/fontes`, { cache: 'no-store' }).then(safe).catch(() => []),
     fetch(`${API}/rituais`, { cache: 'no-store' }).then(safe).catch(() => []),
     fetch(`${API}/poderes`, { cache: 'no-store' }).then(safe).catch(() => []),
     fetch(`${API}/origens`, { cache: 'no-store' }).then(safe).catch(() => []),
-    fetch(`${API}/auth/users`, { cache: 'no-store', headers: authHeaders }).then(safe).catch(() => []),
-    fetch(`${API}/roles`, { cache: 'no-store', headers: authHeaders }).then(safe).catch(() => []),
+    fetch(`${API}/auth/users`, { cache: 'no-store', headers: authHeaders }).then((r) => safeLog(r, '/auth/users')).catch((e) => { console.error('[fetchAll] /auth/users', e); return [] }),
+    fetch(`${API}/roles`, { cache: 'no-store', headers: authHeaders }).then((r) => safeLog(r, '/roles')).catch((e) => { console.error('[fetchAll] /roles', e); return [] }),
   ])
   return { fontes, rituais, poderes, origens, usuarios, roles }
 }

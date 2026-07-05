@@ -1,0 +1,42 @@
+import { getSession } from '@/lib/session'
+import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
+import { MestrePanel } from '@/components/mestre/mestre-panel'
+
+const API = process.env.API_URL ?? 'http://localhost:3001'
+
+async function fetchAll() {
+  const cookieStore = await cookies()
+  const jwt = cookieStore.get('jwt')?.value
+  const authHeaders = {
+    'Content-Type': 'application/json',
+    ...(jwt ? { Cookie: `jwt=${jwt}` } : {}),
+  }
+
+  const [fontes, rituais, poderes, origens, usuarios, roles] = await Promise.all([
+    fetch(`${API}/fontes`, { cache: 'no-store' }).then((r) => r.json()).catch(() => []),
+    fetch(`${API}/rituais`, { cache: 'no-store' }).then((r) => r.json()).catch(() => []),
+    fetch(`${API}/poderes`, { cache: 'no-store' }).then((r) => r.json()).catch(() => []),
+    fetch(`${API}/origens`, { cache: 'no-store' }).then((r) => r.json()).catch(() => []),
+    fetch(`${API}/auth/users`, { cache: 'no-store', headers: authHeaders }).then((r) => r.json()).catch(() => []),
+    fetch(`${API}/roles`, { cache: 'no-store', headers: authHeaders }).then((r) => r.json()).catch(() => []),
+  ])
+  return { fontes, rituais, poderes, origens, usuarios, roles }
+}
+
+export default async function MestrePage() {
+  const session = await getSession()
+  if (!session?.isAdmin) redirect('/')
+
+  const data = await fetchAll()
+
+  return (
+    <main className="max-w-[1200px] mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-xl font-bold text-foreground tracking-tight">Painel do Mestre</h1>
+        <p className="text-sm text-muted-foreground mt-1">Gerencie o conteudo do compendio</p>
+      </div>
+      <MestrePanel {...data} currentUserId={session.id} />
+    </main>
+  )
+}

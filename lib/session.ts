@@ -5,6 +5,7 @@ export interface Session {
   name: string
   email: string
   isAdmin: boolean
+  mustChangePassword: boolean
   modules: string[]
   writeModules: string[]
 }
@@ -42,11 +43,12 @@ export async function getSession(): Promise<Session | null> {
   }
 
   return {
-    id:           payload.sub as number,
-    name:         (payload.name as string) ?? '',
-    email:        payload.email as string,
-    isAdmin:      (payload.isAdmin as boolean) ?? false,
-    modules:      (payload.modules as string[]) ?? [],
-    writeModules: (payload.writeModules as string[]) ?? [],
+    id:                 payload.sub as number,
+    name:               (payload.name as string) ?? '',
+    email:              payload.email as string,
+    isAdmin:            (payload.isAdmin as boolean) ?? false,
+    mustChangePassword: (payload.mustChangePassword as boolean) ?? false,
+    modules:            (payload.modules as string[]) ?? [],
+    writeModules:       (payload.writeModules as string[]) ?? [],
   }
 }

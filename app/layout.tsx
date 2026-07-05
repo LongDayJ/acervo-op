@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import Link from 'next/link'
 import { Header } from '@/components/header'
 import { SubNav } from '@/components/sub-nav'
 import { StyledProvider } from '@/providers/StyledProvider'
@@ -35,6 +36,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <StyledProvider>
           <Header user={session} />
           <SubNav user={session} />
+          {session?.mustChangePassword && (
+            <div className="bg-amber-950/60 border-b border-amber-800/50 px-4 py-2.5 flex items-center justify-between gap-4">
+              <p className="text-xs text-amber-300">
+                <strong>Troque sua senha.</strong> Por segurança, defina uma senha pessoal antes de continuar.
+              </p>
+              <Link
+                href="/change-password"
+                className="shrink-0 text-xs font-semibold text-amber-300 underline underline-offset-2 hover:text-amber-200 transition-colors"
+              >
+                Trocar agora
+              </Link>
+            </div>
+          )}
           {children}
         </StyledProvider>
       </body>

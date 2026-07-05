@@ -6,7 +6,10 @@ import { getSession } from '@/lib/session'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Compendio -- Ordem Paranormal',
+  title: {
+    default: 'Acervo Paranormal',
+    template: '%s - Acervo Paranormal',
+  },
   description: 'Compendio de Rituais, Poderes e Origens para Ordem Paranormal RPG',
   icons: {
     icon: [

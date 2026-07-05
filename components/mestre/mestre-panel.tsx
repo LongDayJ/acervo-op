@@ -873,10 +873,12 @@ function UsuariosTab({ usuarios: initial, roles, currentUserId, canManageUsers }
 export function MestrePanel({ fontes, rituais, poderes, origens, usuarios, roles, currentUserId, canManageUsers }: Props) {
   const [tab, setTab] = useState<Tab>('rituais')
 
+  const visibleTabs = TABS.filter((t) => t.id !== 'usuarios' || canManageUsers)
+
   return (
     <div className="space-y-6">
       <div className="flex gap-1 border-b border-border">
-        {TABS.map((t) => (
+        {visibleTabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
@@ -894,7 +896,7 @@ export function MestrePanel({ fontes, rituais, poderes, origens, usuarios, roles
         {tab === 'rituais'  && <RituaisTab rituais={rituais} fontes={fontes} />}
         {tab === 'poderes'  && <PoderesTab poderes={poderes} fontes={fontes} />}
         {tab === 'origens'  && <OrigensTab origens={origens} fontes={fontes} />}
-        {tab === 'usuarios' && <UsuariosTab usuarios={usuarios} roles={roles} currentUserId={currentUserId} canManageUsers={canManageUsers} />}
+        {tab === 'usuarios' && canManageUsers && <UsuariosTab usuarios={usuarios} roles={roles} currentUserId={currentUserId} canManageUsers={canManageUsers} />}
       </div>
     </div>
   )

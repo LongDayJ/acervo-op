@@ -8,14 +8,12 @@ const API = process.env.API_URL ?? 'http://localhost:3001'
 async function authFetch(path: string, method: string, body?: object) {
   const cookieStore = await cookies()
   const jwt = cookieStore.get('jwt')?.value
+  console.info(`[authFetch] ${method} ${path}: jwt=${jwt ? jwt.slice(0, 20) + '...' : '<nenhum>'}`)
   const res = await fetch(`${API}${path}`, {
     method,
     headers: {
       'Content-Type': 'application/json',
-      ...(jwt ? {
-        Authorization: `Bearer ${jwt}`,
-        Cookie: `jwt=${jwt}`,
-      } : {}),
+      ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
   })

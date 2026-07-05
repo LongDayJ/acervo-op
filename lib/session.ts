@@ -22,13 +22,24 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 export async function getSession(): Promise<Session | null> {
   const cookieStore = await cookies()
   const token = cookieStore.get('jwt')?.value
-  if (!token) return null
+  if (!token) {
+    console.info('[session] Nenhum JWT encontrado')
+    return null
+  }
 
   const payload = decodeJwtPayload(token)
-  if (!payload) return null
+  if (!payload) {
+    console.error('[session] JWT não pôde ser decodificado')
+    return null
+  }
+
+  console.info('[session] JWT decodificado:', { sub: payload.sub, email: payload.email, isAdmin: payload.isAdmin, exp: payload.exp })
 
   const exp = payload.exp as number | undefined
-  if (exp && Date.now() / 1000 > exp) return null
+  if (exp && Date.now() / 1000 > exp) {
+    console.warn('[session] JWT expirou em', new Date(exp * 1000).toISOString())
+    return null
+  }
 
   return {
     id:           payload.sub as number,

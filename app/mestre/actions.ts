@@ -12,7 +12,10 @@ async function authFetch(path: string, method: string, body?: object) {
     method,
     headers: {
       'Content-Type': 'application/json',
-      ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+      ...(jwt ? {
+        Authorization: `Bearer ${jwt}`,
+        Cookie: `jwt=${jwt}`,
+      } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
   })

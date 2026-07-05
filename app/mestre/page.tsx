@@ -10,7 +10,10 @@ async function fetchAll() {
   const jwt = cookieStore.get('jwt')?.value
   const authHeaders = {
     'Content-Type': 'application/json',
-    ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+    ...(jwt ? {
+      Authorization: `Bearer ${jwt}`,
+      Cookie: `jwt=${jwt}`,
+    } : {}),
   }
 
   const safe = (r: Response) => r.ok ? r.json() : []

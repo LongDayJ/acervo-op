@@ -798,11 +798,20 @@ function UsuariosTab({ usuarios: initial, roles, currentUserId }: { usuarios: Us
   }
 
   function handleDelete(id: number) {
+    console.info(`[mestre-panel] Clique no delete do usuário ${id}`)
     if (id === currentUserId) { alert('Nao e possivel deletar o proprio usuario'); return }
     if (!confirm('Deletar este usuario?')) return
     start(async () => {
-      try { await deleteUsuario(id); setUsuarios((prev) => prev.filter((u) => u.id !== id)) }
-      catch (e: any) { alert(e.message ?? 'Erro ao deletar') }
+      try {
+        console.info(`[mestre-panel] Chamando deleteUsuario(${id})`)
+        await deleteUsuario(id)
+        console.info(`[mestre-panel] Usuário ${id} removido com sucesso no estado local`)
+        setUsuarios((prev) => prev.filter((u) => u.id !== id))
+      }
+      catch (e: any) {
+        console.error(`[mestre-panel] Falha ao deletar usuário ${id}:`, e)
+        alert(e.message ?? 'Erro ao deletar')
+      }
     })
   }
 

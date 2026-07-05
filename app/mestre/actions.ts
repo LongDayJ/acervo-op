@@ -122,7 +122,10 @@ export async function updateUsuario(id: number, data: { name?: string; surname?:
 }
 
 export async function deleteUsuario(id: number) {
+  console.info(`[mestre] Tentando deletar usuário ${id}`)
   const res = await authFetch(`/auth/users/${id}`, 'DELETE')
-  if (!res.ok) throw new Error(await res.text())
+  const body = await res.text().catch(() => '')
+  console.info(`[mestre] Resposta delete usuário ${id}: status=${res.status} body=${body}`)
+  if (!res.ok) throw new Error(body || 'Erro ao deletar usuário')
   // sem revalidatePath — estado gerenciado localmente no componente
 }

@@ -104,14 +104,14 @@ export async function deleteOrigem(id: number) {
 }
 
 // ─── USUARIOS ────────────────────────────────────────────────────────────────
-export async function createUsuario(data: { name: string; email: string; password: string; roleId?: number }) {
+export async function createUsuario(data: { name: string; surname?: string; email: string; password: string; roleId?: number }) {
   const res = await authFetch('/auth/register', 'POST', data)
   if (!res.ok) throw new Error(await res.text())
   // sem revalidatePath — estado gerenciado localmente no componente
   return res.json()
 }
 
-export async function updateUsuario(id: number, data: { name?: string; email?: string; password?: string; roleId?: number | null }) {
+export async function updateUsuario(id: number, data: { name?: string; surname?: string | null; email?: string; password?: string; roleId?: number | null }) {
   const res = await authFetch(`/auth/users/${id}`, 'PATCH', data)
   if (!res.ok) throw new Error(await res.text())
   // sem revalidatePath — estado gerenciado localmente no componente

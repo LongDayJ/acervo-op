@@ -34,7 +34,7 @@ async function fetchAll() {
 
 export default async function MestrePage() {
   const session = await getSession()
-  if (!session?.isAdmin) redirect('/')
+  if (!session?.isAdmin || session.email !== 'mestre@op.com') redirect('/')
 
   const data = await fetchAll()
 

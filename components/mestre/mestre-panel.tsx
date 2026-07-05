@@ -43,7 +43,7 @@ interface Origem {
 }
 
 interface Usuario {
-  id: number; name: string; email: string
+  id: number; name: string; surname: string | null; email: string
   roleId: number | null; roleName: string | null; createdAt: string
 }
 
@@ -742,14 +742,14 @@ function UsuariosTab({ usuarios: initial, roles, currentUserId }: { usuarios: Us
   const [isPending, start] = useTransition()
   const [err, setErr] = useState<string | null>(null)
 
-  const blank = { name: '', email: '', password: '', roleId: '' }
+  const blank = { name: '', surname: '', email: '', password: '', roleId: '' }
   const [form, setForm] = useState(blank)
   const f = (k: keyof typeof blank) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((prev) => ({ ...prev, [k]: e.target.value }))
 
   function openCreate() { setForm(blank); setModal('create'); setErr(null) }
   function openEdit(u: Usuario) {
-    setForm({ name: u.name, email: u.email, password: '', roleId: u.roleId ? String(u.roleId) : '' })
+    setForm({ name: u.name, surname: u.surname ?? '', email: u.email, password: '', roleId: u.roleId ? String(u.roleId) : '' })
     setModal(u); setErr(null)
   }
 
@@ -759,12 +759,12 @@ function UsuariosTab({ usuarios: initial, roles, currentUserId }: { usuarios: Us
       if (!form.name.trim()) { setErr('Nome obrigatorio'); return }
       if (!form.email.trim()) { setErr('Email obrigatorio'); return }
       if (form.password.length < 6) { setErr('Senha minimo 6 caracteres'); return }
-      const data = { name: form.name.trim(), email: form.email.trim(), password: form.password, roleId: form.roleId ? Number(form.roleId) : undefined }
+      const data = { name: form.name.trim(), surname: form.surname.trim() || undefined, email: form.email.trim(), password: form.password, roleId: form.roleId ? Number(form.roleId) : undefined }
       start(async () => {
         try {
           await createUsuario(data)
           setUsuarios((prev) => [...prev, {
-            id: Date.now(), name: data.name, email: data.email,
+            id: Date.now(), name: data.name, surname: data.surname ?? null, email: data.email,
             roleId: data.roleId ?? null,
             roleName: roles.find((r) => r.id === data.roleId)?.name ?? null,
             createdAt: new Date().toISOString(),
@@ -773,8 +773,9 @@ function UsuariosTab({ usuarios: initial, roles, currentUserId }: { usuarios: Us
         } catch (e: any) { setErr(e.message ?? 'Erro desconhecido') }
       })
     } else if (modal) {
-      const data: { name?: string; email?: string; password?: string; roleId?: number | null } = {}
+      const data: { name?: string; surname?: string | null; email?: string; password?: string; roleId?: number | null } = {}
       if (form.name.trim() !== modal.name) data.name = form.name.trim()
+      if (form.surname.trim() !== (modal.surname ?? '')) data.surname = form.surname.trim() || null
       if (form.email.trim() !== modal.email) data.email = form.email.trim()
       if (form.password) data.password = form.password
       if (form.roleId !== (modal.roleId ? String(modal.roleId) : ''))
@@ -785,6 +786,7 @@ function UsuariosTab({ usuarios: initial, roles, currentUserId }: { usuarios: Us
           setUsuarios((prev) => prev.map((u) => u.id === modal.id ? {
             ...u,
             name: form.name.trim() || u.name,
+            surname: form.surname.trim() || null,
             email: form.email.trim() || u.email,
             roleId: form.roleId ? Number(form.roleId) : null,
             roleName: form.roleId ? (roles.find((r) => r.id === Number(form.roleId))?.name ?? null) : null,
@@ -825,7 +827,10 @@ function UsuariosTab({ usuarios: initial, roles, currentUserId }: { usuarios: Us
       />
       {modal !== null && (
         <Modal title={typeof modal === 'string' ? 'Novo Usuario' : 'Editar Usuario'} onClose={() => setModal(null)}>
-          <Field label="Nome"><Input value={form.name} onChange={f('name')} placeholder="Ex: Joao Silva" /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Nome"><Input value={form.name} onChange={f('name')} placeholder="Ex: Joao" /></Field>
+            <Field label="Sobrenome"><Input value={form.surname} onChange={f('surname')} placeholder="Ex: Silva" /></Field>
+          </div>
           <Field label="Email"><Input type="email" value={form.email} onChange={f('email')} placeholder="joao@op.com" /></Field>
           <Field label={typeof modal === 'string' ? 'Senha' : 'Nova Senha (vazio = sem alteracao)'}>
             <Input type="password" value={form.password} onChange={f('password')} placeholder={typeof modal === 'string' ? 'Minimo 6 caracteres' : 'Deixar vazio para nao alterar'} />

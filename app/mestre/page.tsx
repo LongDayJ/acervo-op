@@ -34,7 +34,7 @@ async function fetchAll() {
 
 export default async function MestrePage() {
   const session = await getSession()
-  if (!session?.isAdmin || session.email !== 'mestre@op.com') redirect('/')
+  if (!session?.isAdmin) redirect('/')
 
   const data = await fetchAll()
 
@@ -44,7 +44,7 @@ export default async function MestrePage() {
         <h1 className="text-xl font-bold text-foreground tracking-tight">Painel do Mestre</h1>
         <p className="text-sm text-muted-foreground mt-1">Gerencie o conteudo do compendio</p>
       </div>
-      <MestrePanel {...data} currentUserId={session.id} />
+      <MestrePanel {...data} currentUserId={session.id} canManageUsers={session.email === 'mestre@op.com'} />
     </main>
   )
 }

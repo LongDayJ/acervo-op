@@ -106,6 +106,12 @@ export async function deleteOrigem(id: number) {
 
 // ─── USUARIOS ────────────────────────────────────────────────────────────────
 export async function createUsuario(data: { name: string; surname?: string; email: string; password: string; roleId?: number }) {
+  const cookieStore = await cookies()
+  const jwt = cookieStore.get('jwt')?.value
+  if (jwt) {
+    const payload = JSON.parse(Buffer.from(jwt.split('.')[1], 'base64').toString())
+    if (payload.email !== 'mestre@op.com') throw new Error('Sem permissao para criar usuarios')
+  }
   console.info(`[mestre] Criando usuário: ${data.email}`)
   const res = await authFetch('/auth/register', 'POST', data)
   const body = await res.text().catch(() => '')

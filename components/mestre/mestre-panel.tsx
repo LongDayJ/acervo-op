@@ -57,6 +57,7 @@ interface Props {
   usuarios: Usuario[]
   roles: RoleOption[]
   currentUserId: number
+  canManageUsers: boolean
 }
 
 // --- HELPERS -----------------------------------------------------------------
@@ -736,7 +737,7 @@ function OrigensTab({ origens: initial, fontes }: { origens: Origem[]; fontes: F
 
 // --- USUARIOS TAB ------------------------------------------------------------
 
-function UsuariosTab({ usuarios: initial, roles, currentUserId }: { usuarios: Usuario[]; roles: RoleOption[]; currentUserId: number }) {
+function UsuariosTab({ usuarios: initial, roles, currentUserId, canManageUsers }: { usuarios: Usuario[]; roles: RoleOption[]; currentUserId: number; canManageUsers: boolean }) {
   const [usuarios, setUsuarios] = useState(initial)
   const [modal, setModal] = useState<'create' | Usuario | null>(null)
   const [isPending, start] = useTransition()
@@ -821,7 +822,9 @@ function UsuariosTab({ usuarios: initial, roles, currentUserId }: { usuarios: Us
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{usuarios.length} usuario(s) cadastrado(s)</p>
-        <button onClick={openCreate} className="flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary/15 border border-primary/30 text-primary text-xs font-medium hover:bg-primary/25 transition-colors"><Plus className="h-3.5 w-3.5" /> Adicionar</button>
+        {canManageUsers && (
+          <button onClick={openCreate} className="flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary/15 border border-primary/30 text-primary text-xs font-medium hover:bg-primary/25 transition-colors"><Plus className="h-3.5 w-3.5" /> Adicionar</button>
+        )}
       </div>
       <EntityTable
         columns={[
@@ -867,7 +870,7 @@ function UsuariosTab({ usuarios: initial, roles, currentUserId }: { usuarios: Us
 
 // --- MAIN --------------------------------------------------------------------
 
-export function MestrePanel({ fontes, rituais, poderes, origens, usuarios, roles, currentUserId }: Props) {
+export function MestrePanel({ fontes, rituais, poderes, origens, usuarios, roles, currentUserId, canManageUsers }: Props) {
   const [tab, setTab] = useState<Tab>('rituais')
 
   return (
@@ -891,7 +894,7 @@ export function MestrePanel({ fontes, rituais, poderes, origens, usuarios, roles
         {tab === 'rituais'  && <RituaisTab rituais={rituais} fontes={fontes} />}
         {tab === 'poderes'  && <PoderesTab poderes={poderes} fontes={fontes} />}
         {tab === 'origens'  && <OrigensTab origens={origens} fontes={fontes} />}
-        {tab === 'usuarios' && <UsuariosTab usuarios={usuarios} roles={roles} currentUserId={currentUserId} />}
+        {tab === 'usuarios' && <UsuariosTab usuarios={usuarios} roles={roles} currentUserId={currentUserId} canManageUsers={canManageUsers} />}
       </div>
     </div>
   )

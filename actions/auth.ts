@@ -13,7 +13,7 @@ export async function logoutAction(): Promise<never> {
   if (jwt) {
     await fetch(`${API}/auth/logout`, {
       method: 'POST',
-      headers: { Cookie: `jwt=${jwt}` },
+      headers: { Authorization: `Bearer ${jwt}` },
     }).catch(() => null)
   }
 

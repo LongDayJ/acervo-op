@@ -10,10 +10,11 @@ export const metadata: Metadata = {
   description: 'Compendio de Rituais, Poderes e Origens para Ordem Paranormal RPG',
   icons: {
     icon: [
-      { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
-      { url: '/icon-dark-32x32.png', media: '(prefers-color-scheme: dark)' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon.ico' },
     ],
+    apple: '/apple-touch-icon.png',
   },
 }
 

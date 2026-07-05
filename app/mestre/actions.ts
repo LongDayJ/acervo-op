@@ -108,17 +108,23 @@ export async function deleteOrigem(id: number) {
 
 // ─── USUARIOS ────────────────────────────────────────────────────────────────
 export async function createUsuario(data: { name: string; surname?: string; email: string; password: string; roleId?: number }) {
+  console.info(`[mestre] Criando usuário: ${data.email}`)
   const res = await authFetch('/auth/register', 'POST', data)
-  if (!res.ok) throw new Error(await res.text())
+  const body = await res.text().catch(() => '')
+  console.info(`[mestre] Resposta create usuário ${data.email}: status=${res.status} body=${body.slice(0, 200)}`)
+  if (!res.ok) throw new Error(body || 'Erro ao criar usuário')
   // sem revalidatePath — estado gerenciado localmente no componente
-  return res.json()
+  return JSON.parse(body)
 }
 
 export async function updateUsuario(id: number, data: { name?: string; surname?: string | null; email?: string; password?: string; roleId?: number | null }) {
+  console.info(`[mestre] Atualizando usuário ${id}`)
   const res = await authFetch(`/auth/users/${id}`, 'PATCH', data)
-  if (!res.ok) throw new Error(await res.text())
+  const body = await res.text().catch(() => '')
+  console.info(`[mestre] Resposta update usuário ${id}: status=${res.status} body=${body.slice(0, 200)}`)
+  if (!res.ok) throw new Error(body || 'Erro ao atualizar usuário')
   // sem revalidatePath — estado gerenciado localmente no componente
-  return res.json()
+  return JSON.parse(body)
 }
 
 export async function deleteUsuario(id: number) {

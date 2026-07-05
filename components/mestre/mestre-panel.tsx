@@ -762,8 +762,9 @@ function UsuariosTab({ usuarios: initial, roles, currentUserId }: { usuarios: Us
       const data = { name: form.name.trim(), surname: form.surname.trim() || undefined, email: form.email.trim(), password: form.password, roleId: form.roleId ? Number(form.roleId) : undefined }
       start(async () => {
         try {
+          console.info('[mestre-panel] Chamando createUsuario com:', form)
           await createUsuario(data)
-          setUsuarios((prev) => [...prev, {
+          console.info('[mestre-panel] Usuário criado com sucesso, atualizando estado')
             id: Date.now(), name: data.name, surname: data.surname ?? null, email: data.email,
             roleId: data.roleId ?? null,
             roleName: roles.find((r) => r.id === data.roleId)?.name ?? null,

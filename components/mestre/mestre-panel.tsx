@@ -730,17 +730,30 @@ function OrigensTab({ origens: initial, fontes }: { origens: Origem[]; fontes: F
               </Select>
             </Field>
           </div>
+          <Field label="Descricao da Origem">
+            <Textarea value={form.descricao} onChange={f('descricao')} placeholder="Contexto e historia..." rows={3} />
+          </Field>
+          <Field label="Pericias Treinadas">
+            <div className="grid grid-cols-4 gap-1">
+              {['Acrobacia','Adestramento','Artes','Atletismo','Atualidades','Ciências','Crime','Diplomacia','Enganação','Fortitude','Furtividade','Iniciativa','Intimidação','Intuição','Investigação','Luta','Medicina','Ocultismo','Percepção','Pilotagem','Pontaria','Profissão','Reflexos','Religião','Sobrevivência','Tática','Tecnologia','Vontade'].map((p) => {
+                const sel = pericias.includes(p)
+                return (
+                  <button
+                    key={p} type="button"
+                    onClick={() => setPericias((prev) => sel ? prev.filter((x) => x !== p) : [...prev, p])}
+                    className={cn('h-7 px-2 rounded text-[11px] font-medium transition-colors truncate', sel ? 'bg-primary/20 border border-primary/50 text-primary' : 'bg-muted/20 border border-border/50 text-muted-foreground hover:text-foreground hover:border-border')}
+                  >
+                    {p}
+                  </button>
+                )
+              })}
+            </div>
+          </Field>
           <Field label="Nome do Poder">
             <Input value={form.nomeDoPoder} onChange={f('nomeDoPoder')} placeholder="Ex: Investigacao Policial" />
           </Field>
-          <Field label="Pericias Treinadas">
-            <TagInput tags={pericias} onChange={setPericias} suggestions={periciaSuggestions} placeholder="Ex: Percepcao — Enter para adicionar" />
-          </Field>
           <Field label="Poder de Origem">
             <Textarea value={form.poderDeOrigem} onChange={f('poderDeOrigem')} placeholder="Descricao do poder..." rows={3} />
-          </Field>
-          <Field label="Descricao da Origem">
-            <Textarea value={form.descricao} onChange={f('descricao')} placeholder="Contexto e historia..." rows={3} />
           </Field>
           {err && <p className="text-xs text-rose-400">{err}</p>}
           <div className="flex justify-end gap-2 pt-1">

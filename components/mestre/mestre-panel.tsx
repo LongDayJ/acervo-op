@@ -431,7 +431,7 @@ function RituaisTab({ rituais: initial, fontes }: { rituais: Ritual[]; fontes: F
             <Field label="Nome"><Input value={form.nome} onChange={f('nome')} placeholder="Ex: Chamas de Belial" className="col-span-2" /></Field>
             <Field label="Circulo">
               <Select value={form.circulo} onChange={f('circulo')}>
-                {[1,2,3,4,5].map((n) => <option key={n} value={n}>{n}</option>)}
+                {[1,2,3,4].map((n) => <option key={n} value={n}>{n}</option>)}
               </Select>
             </Field>
             <Field label="Fonte">

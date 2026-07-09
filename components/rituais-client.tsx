@@ -22,15 +22,22 @@ export function RituaisClient({ rituais, circles, elementos, initialSearch = '' 
   )
 
   const filtered = useMemo(() => {
-    return rituais.filter((r) => {
-      const matchSearch = r.nome.toLowerCase().includes(search.toLowerCase())
-      const matchCircle =
-        selectedCircles.length === 0 || selectedCircles.includes(String(r.circulo))
-      const matchEl =
-        selectedElementos.length === 0 ||
-        r.elementos.some((e) => selectedElementos.includes(e))
-      return matchSearch && matchCircle && matchEl
-    })
+    return rituais
+      .filter((r) => {
+        const matchSearch = r.nome.toLowerCase().includes(search.toLowerCase())
+        const matchCircle =
+          selectedCircles.length === 0 || selectedCircles.includes(String(r.circulo))
+        const matchEl =
+          selectedElementos.length === 0 ||
+          r.elementos.some((e) => selectedElementos.includes(e))
+        return matchSearch && matchCircle && matchEl
+      })
+      .sort((a, b) => {
+        const fonteA = a.fonte?.id ?? 0
+        const fonteB = b.fonte?.id ?? 0
+        if (fonteA !== fonteB) return fonteA - fonteB
+        return a.nome.localeCompare(b.nome, 'pt-BR')
+      })
   }, [rituais, search, selectedCircles, selectedElementos])
 
   const selectedRitual = rituais.find((r) => r.slug === selectedSlug) ?? null

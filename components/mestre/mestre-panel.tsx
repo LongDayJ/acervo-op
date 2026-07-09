@@ -334,7 +334,7 @@ function RituaisTab({ rituais: initial, fontes }: { rituais: Ritual[]; fontes: F
   const [isPending, start] = useTransition()
   const [err, setErr] = useState<string | null>(null)
 
-  const blank = { nome: '', circulo: '1', elementos: '', fonteId: '', descricao: '', execucao: '', alcance: '', area: '', alvo: '', efeito: '', duracao: '', resistencia: '' }
+  const blank = { nome: '', circulo: '1', elementos: '', fonteId: '', descricao: '', execucao: 'padrão', alcance: 'curto', area: '', alvo: '', efeito: '', duracao: '', resistencia: '' }
   const [form, setForm] = useState(blank)
   const f = (k: keyof typeof blank) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((prev) => ({ ...prev, [k]: e.target.value }))
@@ -463,8 +463,18 @@ function RituaisTab({ rituais: initial, fontes }: { rituais: Ritual[]; fontes: F
             </div>
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Execucao"><Input value={form.execucao} onChange={f('execucao')} placeholder="Ex: Padrao" /></Field>
-            <Field label="Alcance"><Input value={form.alcance} onChange={f('alcance')} placeholder="Ex: Pessoal" /></Field>
+            <Field label="Execucao">
+              <select value={form.execucao} onChange={f('execucao')} className="w-full h-9 px-3 rounded-md text-sm bg-background border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary/60">
+                <option value="">—</option>
+                {['padrão', 'reação', 'completa', 'livre'].map((o) => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </Field>
+            <Field label="Alcance">
+              <select value={form.alcance} onChange={f('alcance')} className="w-full h-9 px-3 rounded-md text-sm bg-background border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary/60">
+                <option value="">—</option>
+                {['pessoal', 'toque', 'curto', 'médio', 'longo', 'extremo', 'ilimitado', '1,5m', 'médio ou toque'].map((o) => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </Field>
             <Field label="Area"><Input value={form.area} onChange={f('area')} placeholder="Ex: 6m" /></Field>
             <Field label="Alvo"><Input value={form.alvo} onChange={f('alvo')} placeholder="Ex: 1 criatura" /></Field>
             <Field label="Efeito"><Input value={form.efeito} onChange={f('efeito')} placeholder="Ex: 2d6 de dano" /></Field>

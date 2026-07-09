@@ -24,11 +24,8 @@ function MetaRow({ label, value }: { label: string; value?: string | null }) {
 function ModAccordion({ mod }: { mod: Modificacao }) {
   const [open, setOpen] = useState(false)
 
-  const labelMap = { discente: 'Discente', verdadeiro: 'Verdadeiro' }
-  const colorMap = {
-    discente: 'text-indigo-400',
-    verdadeiro: 'text-purple-300',
-  }
+  const labelMap: Record<string, string> = { Discente: 'Discente', discente: 'Discente', Verdadeiro: 'Verdadeiro', verdadeiro: 'Verdadeiro' }
+  const colorMap: Record<string, string> = { Discente: 'text-indigo-400', discente: 'text-indigo-400', Verdadeiro: 'text-purple-300', verdadeiro: 'text-purple-300' }
 
   return (
     <div className="border border-border/60 rounded overflow-hidden">
@@ -139,9 +136,14 @@ export function RitualDetail({ ritual }: RitualDetailProps) {
               Modificacoes
             </h3>
             <div className="space-y-1">
-              {ritual.modificacoes.map((mod, i) => (
-                <ModAccordion key={i} mod={mod} />
-              ))}
+              {[...ritual.modificacoes]
+                .sort((a, b) => {
+                  const order: Record<string, number> = { Discente: 0, discente: 0, Verdadeiro: 1, verdadeiro: 1 }
+                  return (order[a.tipo] ?? 2) - (order[b.tipo] ?? 2)
+                })
+                .map((mod, i) => (
+                  <ModAccordion key={i} mod={mod} />
+                ))}
             </div>
           </div>
         )}

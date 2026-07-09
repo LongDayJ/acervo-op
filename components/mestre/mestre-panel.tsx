@@ -345,6 +345,16 @@ function RituaisTab({ rituais: initial, fontes }: { rituais: Ritual[]; fontes: F
     [initial],
   )
 
+  const sortedRituais = useMemo(
+    () => [...rituais].sort((a, b) => {
+      const fa = a.fonte?.id ?? 0
+      const fb = b.fonte?.id ?? 0
+      if (fa !== fb) return fa - fb
+      return a.nome.localeCompare(b.nome, 'pt-BR')
+    }),
+    [rituais],
+  )
+
   function modTextField(idx: number, key: Exclude<keyof ModForm, 'requisitos'>) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setMods((prev) => prev.map((m, i) => i === idx ? { ...m, [key]: e.target.value } : m))
@@ -423,7 +433,7 @@ function RituaisTab({ rituais: initial, fontes }: { rituais: Ritual[]; fontes: F
           { key: 'elementos', label: 'Elementos', render: (r) => <span className="text-xs text-muted-foreground">{r.elementos.join(', ')}</span> },
           { key: 'fonte', label: 'Fonte', render: (r) => <span className="text-xs">{r.fonte.abreviacao ?? r.fonte.nome}</span> },
         ]}
-        rows={rituais} onEdit={openEdit} onDelete={handleDelete} isPending={isPending}
+        rows={sortedRituais} onEdit={openEdit} onDelete={handleDelete} isPending={isPending}
       />
       {modal !== null && (
         <Modal title={modal === 'create' ? 'Novo Ritual' : 'Editar Ritual'} onClose={() => setModal(null)}>

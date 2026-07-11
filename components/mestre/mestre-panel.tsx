@@ -758,6 +758,15 @@ function PoderesTab({ poderes: initial, fontes, elementos }: { poderes: Poder[];
         columns={[
           { key: 'nome', label: 'Nome', render: (p) => p.nome },
           { key: 'tipo', label: 'Tipo', render: (p) => <span className="text-xs text-muted-foreground">{p.tipo}</span> },
+          { key: 'elemento', label: 'Elemento', render: (p) => {
+            if (!p.elemento) return <span className="text-muted-foreground/30 text-xs">—</span>
+            const s = getElementoInlineStyle(p.elemento.cor)
+            return (
+              <span className="inline-block px-2 py-0.5 rounded text-xs font-medium" style={s.pill}>
+                {p.elemento.nome}
+              </span>
+            )
+          }},
           { key: 'fonte', label: 'Fonte', render: (p) => <span className="text-xs">{p.fonte.abreviacao ?? p.fonte.nome}</span> },
         ]}
         rows={poderes} onEdit={openEdit} onDelete={handleDelete} isPending={isPending}

@@ -13,7 +13,7 @@ interface PoderesClientProps {
   initialSearch?: string
 }
 
-const COLS = '1.2fr 2.5fr 110px 56px'
+const COLS = '1.2fr 110px 80px 1.6fr 56px'
 
 const ATTRS = ['For', 'Agi', 'Int', 'Pre', 'Vig', 'NEX']
 
@@ -269,8 +269,9 @@ export function PoderesClient({ poderes, tipos, elementos, initialSearch = '' }:
 
             <div className="grid shrink-0 border-b border-border bg-secondary/30" style={{ gridTemplateColumns: COLS }}>
               <div className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Nome</div>
-              <div className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider text-center">Requisitos</div>
               <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider text-center">Tipo</div>
+              <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider text-center">Elemento</div>
+              <div className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider text-center">Requisitos</div>
               <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider text-center">Fonte</div>
             </div>
 
@@ -296,13 +297,25 @@ export function PoderesClient({ poderes, tipos, elementos, initialSearch = '' }:
                       <div className="px-3 py-[4px] text-xs text-foreground truncate">
                         {poder.nome}
                       </div>
-                      <div className="px-3 py-[4px] text-[11px] text-muted-foreground/55 truncate text-center">
-                        {poder.requisitos?.join(', ') ?? '—'}
-                      </div>
                       <div className="px-2 py-[4px] flex justify-center">
                         <span className={cn('px-[6px] py-[2px] rounded text-[10px] font-medium leading-tight whitespace-nowrap', tipoStyle.pill)}>
                           {poder.tipo}
                         </span>
+                      </div>
+                      <div className="px-2 py-[4px] flex justify-center">
+                        {poder.elemento ? (() => {
+                          const s = getElementoInlineStyle(poder.elemento.cor)
+                          return (
+                            <span className="px-[6px] py-[2px] rounded text-[10px] font-medium leading-tight whitespace-nowrap" style={s.pill}>
+                              {poder.elemento.nome}
+                            </span>
+                          )
+                        })() : (
+                          <span className="text-[11px] text-muted-foreground/30">—</span>
+                        )}
+                      </div>
+                      <div className="px-3 py-[4px] text-[11px] text-muted-foreground/55 truncate text-center">
+                        {poder.requisitos?.join(', ') ?? '—'}
                       </div>
                       <div className="px-2 py-[4px] text-[11px] text-muted-foreground/50 text-center">
                         {poder.fonte.abreviacao ?? poder.fonte.nome}

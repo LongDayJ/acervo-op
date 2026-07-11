@@ -1,3 +1,9 @@
+export interface Elemento {
+  id: number
+  nome: string
+  cor: string
+}
+
 export interface Fonte {
   id: number
   nome: string
@@ -38,13 +44,16 @@ export interface Origem {
   fonte: Fonte
 }
 
-export type PoderTipo = 'Combatente' | 'Especialista' | 'Geral' | 'Ocultista'
+export type PoderTipo = 'Combatente' | 'Especialista' | 'Geral' | 'Ocultista' | 'Paranormal'
 
 export interface Poder {
+  id: number
   slug: string
   nome: string
   tipo: PoderTipo
   requisitos: string[] | null
   descricao: string
+  elemento: Elemento | null
+  afinidade: string | null
   fonte: Fonte
 }

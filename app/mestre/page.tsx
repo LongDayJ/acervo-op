@@ -21,15 +21,16 @@ async function fetchAll() {
     return []
   }
 
-  const [fontes, rituais, poderes, origens, usuarios, roles] = await Promise.all([
-    fetch(`${API}/fontes`, { cache: 'no-store' }).then(safe).catch(() => []),
-    fetch(`${API}/rituais`, { cache: 'no-store' }).then(safe).catch(() => []),
-    fetch(`${API}/poderes`, { cache: 'no-store' }).then(safe).catch(() => []),
-    fetch(`${API}/origens`, { cache: 'no-store' }).then(safe).catch(() => []),
+  const [fontes, rituais, poderes, origens, elementos, usuarios, roles] = await Promise.all([
+    fetch(`${API}/fontes`,    { cache: 'no-store' }).then(safe).catch(() => []),
+    fetch(`${API}/rituais`,   { cache: 'no-store' }).then(safe).catch(() => []),
+    fetch(`${API}/poderes`,   { cache: 'no-store' }).then(safe).catch(() => []),
+    fetch(`${API}/origens`,   { cache: 'no-store' }).then(safe).catch(() => []),
+    fetch(`${API}/elementos`, { cache: 'no-store' }).then(safe).catch(() => []),
     fetch(`${API}/auth/users`, { cache: 'no-store', headers: authHeaders }).then((r) => safeLog(r, '/auth/users')).catch((e) => { console.error('[fetchAll] /auth/users', e); return [] }),
-    fetch(`${API}/roles`, { cache: 'no-store', headers: authHeaders }).then((r) => safeLog(r, '/roles')).catch((e) => { console.error('[fetchAll] /roles', e); return [] }),
+    fetch(`${API}/roles`,      { cache: 'no-store', headers: authHeaders }).then((r) => safeLog(r, '/roles')).catch((e) => { console.error('[fetchAll] /roles', e); return [] }),
   ])
-  return { fontes, rituais, poderes, origens, usuarios, roles }
+  return { fontes, rituais, poderes, origens, elementos, usuarios, roles }
 }
 
 export default async function MestrePage() {

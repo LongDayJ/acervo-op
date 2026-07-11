@@ -3,12 +3,13 @@
 import { useState, useMemo } from 'react'
 import { Search, X, SlidersHorizontal, ChevronUp, ChevronDown } from 'lucide-react'
 import { PoderDetail } from '@/components/poder-detail'
-import { cn, getTipoStyle } from '@/lib/utils'
-import type { Poder } from '@/lib/types'
+import { cn, getTipoStyle, getElementoInlineStyle } from '@/lib/utils'
+import type { Poder, Elemento } from '@/lib/types'
 
 interface PoderesClientProps {
   poderes: Poder[]
   tipos: string[]
+  elementos: Elemento[]
   initialSearch?: string
 }
 
@@ -40,8 +41,8 @@ const TIPO_DOT: Record<string, string> = {
 }
 
 function FilterRow({
-  dot, label, active, onClick,
-}: { dot: string; label: string; active: boolean; onClick: () => void }) {
+  dot, dotStyle, label, active, onClick,
+}: { dot?: string; dotStyle?: React.CSSProperties; label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -50,7 +51,7 @@ function FilterRow({
         active ? 'bg-white/[0.06]' : 'hover:bg-white/[0.03]'
       )}
     >
-      <span className={cn('shrink-0 w-2 h-2 rounded-full', dot)} />
+      <span className={cn('shrink-0 w-2 h-2 rounded-full', dot)} style={dotStyle} />
       <span className={cn('flex-1 text-[12px]', active ? 'text-foreground' : 'text-muted-foreground/70')}>
         {label}
       </span>
@@ -78,15 +79,15 @@ function FilterGroup({ title, children }: { title: string; children: React.React
   )
 }
 
-export function PoderesClient({ poderes, tipos, initialSearch = '' }: PoderesClientProps) {
+export function PoderesClient({ poderes, tipos, elementos, initialSearch = '' }: PoderesClientProps) {
   const [search, setSearch] = useState(initialSearch)
   const [showFilters, setShowFilters] = useState(false)
   const [selectedTipos, setSelectedTipos] = useState<string[]>([])
   const [selectedReqs, setSelectedReqs] = useState<string[]>([])
   const [selectedFontes, setSelectedFontes] = useState<string[]>([])
+  const [selectedElementos, setSelectedElementos] = useState<number[]>([])
   const [selectedNome, setSelectedNome] = useState<string | null>(poderes[0]?.nome ?? null)
 
-  // Atributos presentes nos dados
   const atributos = useMemo(() => {
     const found = new Set<string>()
     for (const p of poderes) {
@@ -98,27 +99,29 @@ export function PoderesClient({ poderes, tipos, initialSearch = '' }: PoderesCli
     return ['Nenhum', ...ATTRS.filter((a) => found.has(a))]
   }, [poderes])
 
-  // Fontes unicas
   const fontes = useMemo(() => {
     return [...new Set(poderes.map((p) => p.fonte.abreviacao ?? p.fonte.nome))].sort()
   }, [poderes])
 
   const filtered = useMemo(() => {
     return poderes.filter((p) => {
-      const matchSearch = p.nome.toLowerCase().includes(search.toLowerCase())
-      const matchTipo = selectedTipos.length === 0 || selectedTipos.includes(p.tipo)
-      const matchReq =
+      const matchSearch   = p.nome.toLowerCase().includes(search.toLowerCase())
+      const matchTipo     = selectedTipos.length === 0 || selectedTipos.includes(p.tipo)
+      const matchReq      =
         selectedReqs.length === 0 ||
         selectedReqs.some((req) => {
           if (req === 'Nenhum') return !p.requisitos
           return p.requisitos?.includes(req) ?? false
         })
-      const matchFonte =
+      const matchFonte    =
         selectedFontes.length === 0 ||
         selectedFontes.includes(p.fonte.abreviacao ?? p.fonte.nome)
-      return matchSearch && matchTipo && matchReq && matchFonte
+      const matchElemento =
+        selectedElementos.length === 0 ||
+        (p.elemento !== null && selectedElementos.includes(p.elemento.id))
+      return matchSearch && matchTipo && matchReq && matchFonte && matchElemento
     })
-  }, [poderes, search, selectedTipos, selectedReqs, selectedFontes])
+  }, [poderes, search, selectedTipos, selectedReqs, selectedFontes, selectedElementos])
 
   const selectedPoder =
     (filtered.find((p) => p.nome === selectedNome) ?? filtered[0]) || null
@@ -126,12 +129,16 @@ export function PoderesClient({ poderes, tipos, initialSearch = '' }: PoderesCli
   const toggle = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (val: string) =>
     setter((prev) => prev.includes(val) ? prev.filter((x) => x !== val) : [...prev, val])
 
-  const activeCount = selectedTipos.length + selectedReqs.length + selectedFontes.length
+  const toggleElemento = (id: number) =>
+    setSelectedElementos((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
+
+  const activeCount = selectedTipos.length + selectedReqs.length + selectedFontes.length + selectedElementos.length
 
   const clearAll = () => {
     setSelectedTipos([])
     setSelectedReqs([])
     setSelectedFontes([])
+    setSelectedElementos([])
   }
 
   return (
@@ -166,7 +173,6 @@ export function PoderesClient({ poderes, tipos, initialSearch = '' }: PoderesCli
 
           <div className="h-4 w-px bg-border shrink-0" />
 
-          {/* Botao filtros */}
           <button
             onClick={() => setShowFilters((v) => !v)}
             className={cn(
@@ -197,10 +203,10 @@ export function PoderesClient({ poderes, tipos, initialSearch = '' }: PoderesCli
         </div>
       </div>
 
-      {/* Painel de filtros extendidos */}
+      {/* Painel de filtros */}
       {showFilters && (
         <div className="border-b border-border bg-card/20 px-4 py-3 shrink-0">
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-4 gap-6">
 
             <FilterGroup title="Tipo">
               {tipos.map((t) => (
@@ -210,6 +216,18 @@ export function PoderesClient({ poderes, tipos, initialSearch = '' }: PoderesCli
                   label={t}
                   active={selectedTipos.includes(t)}
                   onClick={() => toggle(setSelectedTipos)(t)}
+                />
+              ))}
+            </FilterGroup>
+
+            <FilterGroup title="Elemento">
+              {elementos.map((el) => (
+                <FilterRow
+                  key={el.id}
+                  dotStyle={{ backgroundColor: el.cor }}
+                  label={el.nome}
+                  active={selectedElementos.includes(el.id)}
+                  onClick={() => toggleElemento(el.id)}
                 />
               ))}
             </FilterGroup>

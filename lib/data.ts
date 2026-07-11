@@ -1,4 +1,4 @@
-import type { Ritual, Origem, Poder } from '@/lib/types'
+import type { Ritual, Origem, Poder, Elemento } from '@/lib/types'
 
 const API = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -30,12 +30,16 @@ export async function getPoderes(): Promise<Poder[]> {
   return apiFetch<Poder[]>('/poderes')
 }
 
+export async function getElementos(): Promise<Elemento[]> {
+  return apiFetch<Elemento[]>('/elementos')
+}
+
 export function getCirculos(rituais: Ritual[]): string[] {
   const set = new Set(rituais.map((r) => String(r.circulo)))
   return Array.from(set).sort((a, b) => Number(a) - Number(b))
 }
 
-export function getElementos(rituais: Ritual[]): string[] {
+export function getElementosRituais(rituais: Ritual[]): string[] {
   const set = new Set(rituais.flatMap((r) => r.elementos))
   return Array.from(set).sort()
 }

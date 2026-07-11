@@ -1,4 +1,4 @@
-import { getPoderes, getTipos } from '@/lib/data'
+import { getPoderes, getTipos, getElementos } from '@/lib/data'
 import { PoderesClient } from '@/components/poderes-client'
 
 export const dynamic = 'force-dynamic'
@@ -11,11 +11,11 @@ export default async function PoderesPage({ searchParams }: Props) {
   const { q } = await searchParams
 
   try {
-    const poderes = await getPoderes()
+    const [poderes, elementos] = await Promise.all([getPoderes(), getElementos()])
     const tipos = getTipos(poderes)
     return (
       <main>
-        <PoderesClient poderes={poderes} tipos={tipos} initialSearch={q ?? ''} />
+        <PoderesClient poderes={poderes} tipos={tipos} elementos={elementos} initialSearch={q ?? ''} />
       </main>
     )
   } catch {

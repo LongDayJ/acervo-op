@@ -1,6 +1,7 @@
 'use client'
 
-import { cn, getTipoStyle } from '@/lib/utils'
+import { cn, getTipoStyle, getElementoInlineStyle } from '@/lib/utils'
+import { MarkdownText } from '@/components/markdown-text'
 import type { Poder } from '@/lib/types'
 
 interface PoderDetailProps {
@@ -9,6 +10,7 @@ interface PoderDetailProps {
 
 export function PoderDetail({ poder }: PoderDetailProps) {
   const tipoStyle = getTipoStyle(poder.tipo)
+  const elStyle   = poder.elemento ? getElementoInlineStyle(poder.elemento.cor) : null
 
   return (
     <div className="h-full overflow-y-auto">
@@ -22,6 +24,14 @@ export function PoderDetail({ poder }: PoderDetailProps) {
             <span className={cn('inline-block px-[6px] py-[2px] rounded text-[11px] font-medium', tipoStyle.pill)}>
               {poder.tipo}
             </span>
+            {elStyle && poder.elemento && (
+              <span
+                className="inline-block px-[6px] py-[2px] rounded text-[11px] font-medium"
+                style={elStyle.pill}
+              >
+                {poder.elemento.nome}
+              </span>
+            )}
             <span className="text-border">·</span>
             <span className="text-xs text-muted-foreground">{poder.fonte.nome}</span>
           </div>
@@ -29,9 +39,7 @@ export function PoderDetail({ poder }: PoderDetailProps) {
 
         <div className="h-px bg-border/50" />
 
-        <p className="text-[13px] leading-relaxed text-foreground/90">
-          {poder.descricao}
-        </p>
+        <MarkdownText text={poder.descricao} />
 
         {poder.requisitos && poder.requisitos.length > 0 && (
           <div className="border-t border-border/40 pt-3">
@@ -39,6 +47,15 @@ export function PoderDetail({ poder }: PoderDetailProps) {
               Requisitos
             </span>
             <p className="text-xs text-foreground/80 mt-1">{poder.requisitos.join(', ')}</p>
+          </div>
+        )}
+
+        {poder.afinidade && (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 space-y-1">
+            <span className="text-[10px] font-semibold text-primary/70 uppercase tracking-wider">
+              Afinidade
+            </span>
+            <MarkdownText text={poder.afinidade} className="[&_p]:text-foreground/85" />
           </div>
         )}
 

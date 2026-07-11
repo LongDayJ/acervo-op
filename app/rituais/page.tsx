@@ -1,4 +1,4 @@
-import { getRituais, getCirculos, getElementos } from '@/lib/data'
+import { getRituais, getCirculos, getElementosRituais } from '@/lib/data'
 import { RituaisClient } from '@/components/rituais-client'
 
 export const dynamic = 'force-dynamic'
@@ -13,7 +13,7 @@ export default async function RituaisPage({ searchParams }: Props) {
   try {
     const rituais = await getRituais()
     const circles = getCirculos(rituais)
-    const elementos = getElementos(rituais)
+    const elementos = getElementosRituais(rituais)
     return (
       <main>
         <RituaisClient rituais={rituais} circles={circles} elementos={elementos} initialSearch={q ?? ''} />

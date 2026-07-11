@@ -36,7 +36,7 @@ export function RituaisClient({ rituais, circles, elementos, initialSearch = '' 
         const fonteA = a.fonte?.id ?? 0
         const fonteB = b.fonte?.id ?? 0
         if (fonteA !== fonteB) return fonteA - fonteB
-        return a.nome.localeCompare(b.nome, 'pt-BR')
+        return a.id - b.id
       })
   }, [rituais, search, selectedCircles, selectedElementos])
 

@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useTransition, useRef, useMemo } from 'react'
-import { cn, getElementStyle } from '@/lib/utils'
+import { cn, getElementStyle, getElementoInlineStyle } from '@/lib/utils'
 import { Plus, Pencil, Trash2, Loader2, X, Check } from 'lucide-react'
 import {
+  createElemento, updateElemento, deleteElemento,
   createFonte, updateFonte, deleteFonte,
   createRitual, updateRitual, deleteRitual,
   createPoder, updatePoder, deletePoder,
@@ -31,9 +32,12 @@ interface Ritual {
 interface ModForm { tipo: string; custo_pe: string; requisitos: string[]; descricao: string }
 const BLANK_MOD: ModForm = { tipo: 'Discente', custo_pe: '', requisitos: [], descricao: '' }
 
+interface Elemento { id: number; nome: string; cor: string }
+
 interface Poder {
   id: number; slug: string; nome: string; tipo: string
   requisitos: string[] | null; descricao: string; fonte: Fonte
+  elemento: Elemento | null; afinidade: string | null
 }
 
 interface Origem {
@@ -54,6 +58,7 @@ interface Props {
   rituais: Ritual[]
   poderes: Poder[]
   origens: Origem[]
+  elementos: Elemento[]
   usuarios: Usuario[]
   roles: RoleOption[]
   currentUserId: number
@@ -247,14 +252,146 @@ function EntityTable<T extends { id: number }>({
 
 // --- TABS --------------------------------------------------------------------
 
-type Tab = 'fontes' | 'rituais' | 'poderes' | 'origens' | 'usuarios'
+type Tab = 'elementos' | 'fontes' | 'rituais' | 'poderes' | 'origens' | 'usuarios'
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'fontes',   label: 'Fontes'   },
-  { id: 'rituais',  label: 'Rituais'  },
-  { id: 'poderes',  label: 'Poderes'  },
-  { id: 'origens',  label: 'Origens'  },
-  { id: 'usuarios', label: 'Usuarios' },
+  { id: 'elementos', label: 'Elementos' },
+  { id: 'fontes',    label: 'Fontes'    },
+  { id: 'rituais',   label: 'Rituais'   },
+  { id: 'poderes',   label: 'Poderes'   },
+  { id: 'origens',   label: 'Origens'   },
+  { id: 'usuarios',  label: 'Usuarios'  },
 ]
+
+// --- COLOR PICKER ------------------------------------------------------------
+
+const COLOR_PALETTE = [
+  '#f43f5e','#fb923c','#facc15','#a3e635','#34d399',
+  '#22d3ee','#60a5fa','#818cf8','#a78bfa','#e879f9',
+  '#94a3b8','#f97316','#eab308','#4ade80','#2dd4bf',
+  '#38bdf8','#6366f1','#8b5cf6','#ec4899','#71717a',
+]
+
+function ColorPicker({ value, onChange }: { value: string; onChange: (cor: string) => void }) {
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-10 gap-1.5">
+        {COLOR_PALETTE.map((cor) => (
+          <button
+            key={cor} type="button"
+            onClick={() => onChange(cor)}
+            className="w-6 h-6 rounded-full transition-transform hover:scale-110 focus:outline-none"
+            style={{
+              backgroundColor: cor,
+              boxShadow: value === cor ? `0 0 0 2px #0f0f0f, 0 0 0 4px ${cor}` : undefined,
+              transform: value === cor ? 'scale(1.15)' : undefined,
+            }}
+          />
+        ))}
+      </div>
+      <div className="flex items-center gap-2">
+        <span
+          className="w-7 h-7 rounded shrink-0 border border-border/60"
+          style={{ backgroundColor: value }}
+        />
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="#71717a"
+          className={cn(
+            'flex-1 h-7 px-2 rounded border border-border bg-background/60 text-xs text-foreground',
+            'placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/50',
+          )}
+        />
+      </div>
+    </div>
+  )
+}
+
+// --- ELEMENTOS TAB -----------------------------------------------------------
+
+function ElementosTab({ elementos: initial }: { elementos: Elemento[] }) {
+  const [elementos, setElementos] = useState(initial)
+  const [modal, setModal] = useState<'create' | Elemento | null>(null)
+  const [isPending, start] = useTransition()
+  const [err, setErr] = useState<string | null>(null)
+
+  const blank = { nome: '', cor: '#71717a' }
+  const [form, setForm] = useState(blank)
+  const f = (k: keyof typeof blank) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((prev) => ({ ...prev, [k]: e.target.value }))
+
+  function openCreate() { setForm(blank); setModal('create'); setErr(null) }
+  function openEdit(el: Elemento) { setForm({ nome: el.nome, cor: el.cor }); setModal(el); setErr(null) }
+
+  function handleSubmit() {
+    setErr(null)
+    if (!form.nome.trim()) { setErr('Nome obrigatorio'); return }
+    start(async () => {
+      try {
+        if (typeof modal === 'string') {
+          const created = await createElemento({ nome: form.nome.trim(), cor: form.cor })
+          setElementos((prev) => [...prev, created])
+        } else if (modal) {
+          const updated = await updateElemento(modal.id, { nome: form.nome.trim(), cor: form.cor })
+          setElementos((prev) => prev.map((el) => el.id === updated.id ? updated : el))
+        }
+        setModal(null)
+      } catch (e: any) { setErr(e.message ?? 'Erro desconhecido') }
+    })
+  }
+
+  function handleDelete(id: number) {
+    if (!confirm('Deletar este elemento? Poderes vinculados perderao o elemento.')) return
+    start(async () => {
+      try { await deleteElemento(id); setElementos((prev) => prev.filter((el) => el.id !== id)) }
+      catch (e: any) { alert(e.message ?? 'Erro ao deletar') }
+    })
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{elementos.length} elemento(s) cadastrado(s)</p>
+        <button onClick={openCreate} className="flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary/15 border border-primary/30 text-primary text-xs font-medium hover:bg-primary/25 transition-colors"><Plus className="h-3.5 w-3.5" /> Adicionar</button>
+      </div>
+      <EntityTable
+        columns={[
+          { key: 'nome', label: 'Nome', render: (el) => {
+            const s = getElementoInlineStyle(el.cor)
+            return (
+              <span className="inline-block px-2 py-0.5 rounded text-xs font-medium" style={s.pill}>
+                {el.nome}
+              </span>
+            )
+          }},
+          { key: 'cor', label: 'Cor', render: (el) => (
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: el.cor }} />
+              {el.cor}
+            </span>
+          )},
+        ]}
+        rows={elementos} onEdit={openEdit} onDelete={handleDelete} isPending={isPending}
+      />
+      {modal !== null && (
+        <Modal title={modal === 'create' ? 'Novo Elemento' : 'Editar Elemento'} onClose={() => setModal(null)}>
+          <Field label="Nome"><Input value={form.nome} onChange={f('nome')} placeholder="Ex: Sonho" /></Field>
+          <Field label="Cor">
+            <ColorPicker value={form.cor} onChange={(cor) => setForm((prev) => ({ ...prev, cor }))} />
+          </Field>
+          {err && <p className="text-xs text-rose-400">{err}</p>}
+          <div className="flex justify-end gap-2 pt-1">
+            <button onClick={() => setModal(null)} className="h-8 px-3 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">Cancelar</button>
+            <button onClick={handleSubmit} disabled={isPending} className="flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-white text-xs font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors">
+              {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Salvar
+            </button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+}
 
 // --- FONTES TAB --------------------------------------------------------------
 
@@ -350,7 +487,7 @@ function RituaisTab({ rituais: initial, fontes }: { rituais: Ritual[]; fontes: F
       const fa = a.fonte?.id ?? 0
       const fb = b.fonte?.id ?? 0
       if (fa !== fb) return fa - fb
-      return a.nome.localeCompare(b.nome, 'pt-BR')
+      return a.id - b.id
     }),
     [rituais],
   )
@@ -543,13 +680,13 @@ function RituaisTab({ rituais: initial, fontes }: { rituais: Ritual[]; fontes: F
 
 // --- PODERES TAB -------------------------------------------------------------
 
-function PoderesTab({ poderes: initial, fontes }: { poderes: Poder[]; fontes: Fonte[] }) {
+function PoderesTab({ poderes: initial, fontes, elementos }: { poderes: Poder[]; fontes: Fonte[]; elementos: Elemento[] }) {
   const [poderes, setPoderes] = useState(initial)
   const [modal, setModal] = useState<'create' | Poder | null>(null)
   const [isPending, start] = useTransition()
   const [err, setErr] = useState<string | null>(null)
 
-  const blank = { nome: '', tipo: '', descricao: '', fonteId: '' }
+  const blank = { nome: '', tipo: '', descricao: '', afinidade: '', elementoId: '', fonteId: '' }
   const [form, setForm] = useState(blank)
   const [requisitos, setRequisitos] = useState<string[]>([])
   const f = (k: keyof typeof blank) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -562,16 +699,30 @@ function PoderesTab({ poderes: initial, fontes }: { poderes: Poder[]; fontes: Fo
 
   function openCreate() { setForm(blank); setRequisitos([]); setModal('create'); setErr(null) }
   function openEdit(p: Poder) {
-    setForm({ nome: p.nome, tipo: p.tipo, descricao: p.descricao, fonteId: String(p.fonte.id) })
+    setForm({
+      nome: p.nome, tipo: p.tipo, descricao: p.descricao,
+      afinidade: p.afinidade ?? '',
+      elementoId: p.elemento ? String(p.elemento.id) : '',
+      fonteId: String(p.fonte.id),
+    })
     setRequisitos(p.requisitos ?? [])
     setModal(p); setErr(null)
   }
 
   function handleSubmit() {
     setErr(null)
-    const data = { nome: form.nome.trim(), tipo: form.tipo.trim(), requisitos: requisitos.length > 0 ? requisitos : null, descricao: form.descricao.trim(), fonteId: Number(form.fonteId) }
-    if (!data.nome) { setErr('Nome obrigatorio'); return }
-    if (!data.tipo) { setErr('Tipo obrigatorio'); return }
+    const isParanormal = form.tipo === 'Paranormal'
+    const data = {
+      nome: form.nome.trim(), tipo: form.tipo.trim(),
+      requisitos: requisitos.length > 0 ? requisitos : null,
+      descricao: form.descricao.trim(),
+      elementoId: isParanormal && form.elementoId ? Number(form.elementoId) : null,
+      afinidade: isParanormal ? (form.afinidade.trim() || null) : null,
+      fonteId: Number(form.fonteId),
+    }
+    if (!data.nome)    { setErr('Nome obrigatorio'); return }
+    if (!data.tipo)    { setErr('Tipo obrigatorio'); return }
+    if (isParanormal && !data.elementoId) { setErr('Elemento obrigatorio para poderes paranormais'); return }
     if (!data.fonteId) { setErr('Fonte obrigatoria'); return }
     start(async () => {
       try {
@@ -595,7 +746,7 @@ function PoderesTab({ poderes: initial, fontes }: { poderes: Poder[]; fontes: Fo
     })
   }
 
-  const TIPOS = ['Combatente', 'Especialista', 'Geral', 'Ocultista']
+  const TIPOS = ['Combatente', 'Especialista', 'Geral', 'Ocultista', 'Paranormal']
 
   return (
     <div className="space-y-4">
@@ -628,11 +779,41 @@ function PoderesTab({ poderes: initial, fontes }: { poderes: Poder[]; fontes: Fo
               </Select>
             </Field>
           </div>
+          {form.tipo === 'Paranormal' && (
+            <>
+              <Field label="Elemento *">
+                <div className={cn(
+                  'flex flex-wrap gap-1.5 p-2 rounded border transition-colors',
+                  err && !form.elementoId ? 'border-rose-500/60 bg-rose-500/5' : 'border-transparent'
+                )}>
+                  {elementos.map((el) => {
+                    const selected = form.elementoId === String(el.id)
+                    const s = getElementoInlineStyle(el.cor)
+                    return (
+                      <button
+                        key={el.id} type="button"
+                        onClick={() => setForm((prev) => ({ ...prev, elementoId: selected ? '' : String(el.id) }))}
+                        className="h-7 px-3 rounded-full text-xs font-medium transition-all"
+                        style={selected ? s.active : s.filter}
+                      >
+                        {el.nome}
+                      </button>
+                    )
+                  })}
+                </div>
+              </Field>
+            </>
+          )}
+          <Field label="Descricao (Markdown)">
+            <Textarea value={form.descricao} onChange={f('descricao')} placeholder="Descricao completa... **negrito** *italico*" rows={4} />
+          </Field>
+          {form.tipo === 'Paranormal' && (
+            <Field label="Afinidade (Markdown, opcional)">
+              <Textarea value={form.afinidade} onChange={f('afinidade')} placeholder="Efeito ao adquirir este poder pela segunda vez..." rows={3} />
+            </Field>
+          )}
           <Field label="Requisitos">
             <TagInput tags={requisitos} onChange={setRequisitos} suggestions={reqSuggestions} placeholder="Ex: Agil, NEX 25% — Enter para adicionar" />
-          </Field>
-          <Field label="Descricao">
-            <Textarea value={form.descricao} onChange={f('descricao')} placeholder="Descricao completa..." rows={4} />
           </Field>
           {err && <p className="text-xs text-rose-400">{err}</p>}
           <div className="flex justify-end gap-2 pt-1">
@@ -655,29 +836,44 @@ function OrigensTab({ origens: initial, fontes }: { origens: Origem[]; fontes: F
   const [isPending, start] = useTransition()
   const [err, setErr] = useState<string | null>(null)
 
-  const blank = { nome: '', descricao: '', nomeDoPoder: '', poderDeOrigem: '', fonteId: '' }
+  const blank = { nome: '', descricao: '', nomeDoPoder: '', poderDeOrigem: '', fonteId: '', periciaObs: '' }
   const [form, setForm] = useState(blank)
   const [pericias, setPericias] = useState<string[]>([])
   const f = (k: keyof typeof blank) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((prev) => ({ ...prev, [k]: e.target.value }))
 
-  const periciaSuggestions = useMemo(
-    () => [...new Set(initial.flatMap((o) => o.periciasTreinadas ?? []))].sort(),
-    [initial],
-  )
+  const PERICIAS_LIST = ['Acrobacia','Adestramento','Artes','Atletismo','Atualidades','Ciências','Crime','Diplomacia','Enganação','Fortitude','Furtividade','Iniciativa','Intimidação','Intuição','Investigação','Luta','Medicina','Ocultismo','Percepção','Pilotagem','Pontaria','Profissão','Reflexos','Religião','Sobrevivência','Tática','Tecnologia','Vontade']
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  function canonicalizePericias(raw: string[]): string[] {
+    const tokens = raw.flatMap((p) =>
+      p.replace(/[.;]+$/, '').split(/,|\se\s/i).map((s) => s.trim()).filter(Boolean)
+    )
+    return tokens
+      .map((p) => PERICIAS_LIST.find((c) => norm(c) === norm(p)) ?? null)
+      .filter((p): p is string => p !== null)
+  }
 
   function openCreate() { setForm(blank); setPericias([]); setModal('create'); setErr(null) }
   function openEdit(o: Origem) {
-    setForm({ nome: o.nome, descricao: o.descricao, nomeDoPoder: o.nomeDoPoder, poderDeOrigem: o.poderDeOrigem, fonteId: String(o.fonte.id) })
-    setPericias(o.periciasTreinadas ?? [])
+    const canonical = canonicalizePericias(o.periciasTreinadas ?? [])
+    const raw = (o.periciasTreinadas ?? [])
+    // texto livre = partes do raw que não foram mapeadas para nenhuma canônica
+    const rawTokens = raw.flatMap((p) =>
+      p.replace(/[.;]+$/, '').split(/,|\se\s/i).map((s) => s.trim()).filter(Boolean)
+    )
+    const obs = rawTokens.filter((t) => !PERICIAS_LIST.some((c) => norm(c) === norm(t))).join(', ')
+    setForm({ nome: o.nome, descricao: o.descricao, nomeDoPoder: o.nomeDoPoder, poderDeOrigem: o.poderDeOrigem, fonteId: String(o.fonte.id), periciaObs: obs })
+    setPericias(canonical)
     setModal(o); setErr(null)
   }
 
   function handleSubmit() {
     setErr(null)
+    const obs = form.periciaObs.trim()
+    const allPericias = [...pericias, ...(obs ? [obs] : [])]
     const data = {
       nome: form.nome.trim(), descricao: form.descricao.trim(),
-      periciasTreinadas: pericias.length > 0 ? pericias : null,
+      periciasTreinadas: allPericias.length > 0 ? allPericias : null,
       nomeDoPoder: form.nomeDoPoder.trim(), poderDeOrigem: form.poderDeOrigem.trim(),
       fonteId: Number(form.fonteId),
     }
@@ -748,6 +944,7 @@ function OrigensTab({ origens: initial, fontes }: { origens: Origem[]; fontes: F
                 )
               })}
             </div>
+            <Input value={form.periciaObs} onChange={f('periciaObs')} placeholder="Outras (ex: Duas à escolha do mestre)" className="mt-1.5" />
           </Field>
           <Field label="Nome do Poder">
             <Input value={form.nomeDoPoder} onChange={f('nomeDoPoder')} placeholder="Ex: Investigacao Policial" />
@@ -903,7 +1100,7 @@ function UsuariosTab({ usuarios: initial, roles, currentUserId, canManageUsers }
 
 // --- MAIN --------------------------------------------------------------------
 
-export function MestrePanel({ fontes, rituais, poderes, origens, usuarios, roles, currentUserId, canManageUsers }: Props) {
+export function MestrePanel({ fontes, rituais, poderes, origens, elementos, usuarios, roles, currentUserId, canManageUsers }: Props) {
   const [tab, setTab] = useState<Tab>('rituais')
 
   const visibleTabs = TABS.filter((t) => t.id !== 'usuarios' || canManageUsers)
@@ -925,11 +1122,12 @@ export function MestrePanel({ fontes, rituais, poderes, origens, usuarios, roles
         ))}
       </div>
       <div>
-        {tab === 'fontes'   && <FontesTab fontes={fontes} />}
-        {tab === 'rituais'  && <RituaisTab rituais={rituais} fontes={fontes} />}
-        {tab === 'poderes'  && <PoderesTab poderes={poderes} fontes={fontes} />}
-        {tab === 'origens'  && <OrigensTab origens={origens} fontes={fontes} />}
-        {tab === 'usuarios' && canManageUsers && <UsuariosTab usuarios={usuarios} roles={roles} currentUserId={currentUserId} canManageUsers={canManageUsers} />}
+        {tab === 'elementos' && <ElementosTab elementos={elementos} />}
+        {tab === 'fontes'    && <FontesTab fontes={fontes} />}
+        {tab === 'rituais'   && <RituaisTab rituais={rituais} fontes={fontes} />}
+        {tab === 'poderes'   && <PoderesTab poderes={poderes} fontes={fontes} elementos={elementos} />}
+        {tab === 'origens'   && <OrigensTab origens={origens} fontes={fontes} />}
+        {tab === 'usuarios'  && canManageUsers && <UsuariosTab usuarios={usuarios} roles={roles} currentUserId={currentUserId} canManageUsers={canManageUsers} />}
       </div>
     </div>
   )

@@ -20,6 +20,27 @@ async function authFetch(path: string, method: string, body?: object) {
   return res
 }
 
+// ─── ELEMENTOS ───────────────────────────────────────────────────────────────
+export async function createElemento(data: { nome: string; cor?: string }) {
+  const res = await authFetch('/elementos', 'POST', data)
+  if (!res.ok) throw new Error(await res.text())
+  revalidatePath('/mestre')
+  return res.json()
+}
+
+export async function updateElemento(id: number, data: { nome?: string; cor?: string }) {
+  const res = await authFetch(`/elementos/${id}`, 'PATCH', data)
+  if (!res.ok) throw new Error(await res.text())
+  revalidatePath('/mestre')
+  return res.json()
+}
+
+export async function deleteElemento(id: number) {
+  const res = await authFetch(`/elementos/${id}`, 'DELETE')
+  if (!res.ok) throw new Error(await res.text())
+  revalidatePath('/mestre')
+}
+
 // ─── FONTES ──────────────────────────────────────────────────────────────────
 export async function createFonte(data: { nome: string; abreviacao?: string }) {
   const res = await authFetch('/fontes', 'POST', data)

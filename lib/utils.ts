@@ -48,6 +48,25 @@ export function getElementStyle(element: string) {
   )
 }
 
+/** Converte hex #rrggbb → "r, g, b" */
+function hexToRgb(hex: string): string {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  return m ? `${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}` : '113, 113, 122'
+}
+
+/**
+ * Gera estilos inline para um elemento dinâmico (vindo do banco).
+ * Usar como `style={getElementoInlineStyle(elemento.cor).pill}` nos componentes.
+ */
+export function getElementoInlineStyle(cor: string) {
+  const rgb = hexToRgb(cor)
+  return {
+    pill:   { backgroundColor: `rgba(${rgb}, 0.15)`, color: cor, border: `1px solid rgba(${rgb}, 0.4)` } as React.CSSProperties,
+    filter: { borderColor: `rgba(${rgb}, 0.3)`,       color: `rgba(${rgb}, 0.7)`, border: `1px solid rgba(${rgb}, 0.3)` } as React.CSSProperties,
+    active: { backgroundColor: `rgba(${rgb}, 0.2)`,   color: cor,                 border: `1px solid rgba(${rgb}, 0.6)` } as React.CSSProperties,
+  }
+}
+
 export const TIPO_STYLES: Record<string, { pill: string; filter: string; active: string }> = {
   Combatente: {
     pill: 'bg-orange-950/70 text-orange-400 border border-orange-900/50',

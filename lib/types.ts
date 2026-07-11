@@ -18,6 +18,7 @@ export interface Modificacao {
 }
 
 export interface Ritual {
+  id: number
   slug: string
   nome: string
   circulo: number

@@ -87,21 +87,18 @@ export async function deleteRitual(id: number) {
 export async function createPoder(data: object) {
   const res = await authFetch('/poderes', 'POST', data)
   if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
   return res.json()
 }
 
 export async function updatePoder(id: number, data: object) {
   const res = await authFetch(`/poderes/${id}`, 'PATCH', data)
   if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
   return res.json()
 }
 
 export async function deletePoder(id: number) {
   const res = await authFetch(`/poderes/${id}`, 'DELETE')
   if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
 }
 
 // ─── ORIGENS ─────────────────────────────────────────────────────────────────

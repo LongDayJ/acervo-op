@@ -683,7 +683,7 @@ function RituaisTab({ rituais: initial, fontes }: { rituais: Ritual[]; fontes: F
 function PoderesTab({ poderes: initial, fontes, elementos }: { poderes: Poder[]; fontes: Fonte[]; elementos: Elemento[] }) {
   const [poderes, setPoderes] = useState(initial)
   const [modal, setModal] = useState<'create' | Poder | null>(null)
-  const [isPending, start] = useTransition()
+  const [isPending, setIsPending] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
   const blank = { nome: '', tipo: '', descricao: '', afinidade: '', elementoId: '', fonteId: '' }
@@ -709,7 +709,7 @@ function PoderesTab({ poderes: initial, fontes, elementos }: { poderes: Poder[];
     setModal(p); setErr(null)
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     setErr(null)
     const isParanormal = form.tipo === 'Paranormal'
     const data = {
@@ -724,26 +724,26 @@ function PoderesTab({ poderes: initial, fontes, elementos }: { poderes: Poder[];
     if (!data.tipo)    { setErr('Tipo obrigatorio'); return }
     if (isParanormal && !data.elementoId) { setErr('Elemento obrigatorio para poderes paranormais'); return }
     if (!data.fonteId) { setErr('Fonte obrigatoria'); return }
-    start(async () => {
-      try {
-        if (typeof modal === 'string') {
-          const created = await createPoder(data)
-          setPoderes((prev) => [...prev, created])
-        } else if (modal) {
-          const updated = await updatePoder(modal.id, data)
-          setPoderes((prev) => prev.map((p) => p.id === updated.id ? updated : p))
-        }
-        setModal(null)
-      } catch (e: any) { setErr(e.message ?? 'Erro desconhecido') }
-    })
+    setIsPending(true)
+    try {
+      if (typeof modal === 'string') {
+        const created = await createPoder(data)
+        setPoderes((prev) => [...prev, created])
+      } else if (modal) {
+        const updated = await updatePoder(modal.id, data)
+        setPoderes((prev) => prev.map((p) => p.id === updated.id ? updated : p))
+      }
+      setModal(null)
+    } catch (e: any) { setErr(e.message ?? 'Erro desconhecido') }
+    finally { setIsPending(false) }
   }
 
-  function handleDelete(id: number) {
+  async function handleDelete(id: number) {
     if (!confirm('Deletar este poder?')) return
-    start(async () => {
-      try { await deletePoder(id); setPoderes((prev) => prev.filter((p) => p.id !== id)) }
-      catch (e: any) { alert(e.message ?? 'Erro ao deletar') }
-    })
+    setIsPending(true)
+    try { await deletePoder(id); setPoderes((prev) => prev.filter((p) => p.id !== id)) }
+    catch (e: any) { alert(e.message ?? 'Erro ao deletar') }
+    finally { setIsPending(false) }
   }
 
   const TIPOS = ['Combatente', 'Especialista', 'Geral', 'Ocultista', 'Paranormal']

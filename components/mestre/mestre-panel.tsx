@@ -727,23 +727,27 @@ function PoderesTab({ poderes: initial, fontes, elementos }: { poderes: Poder[];
     setIsPending(true)
     try {
       if (typeof modal === 'string') {
-        const created = await createPoder(data)
-        setPoderes((prev) => [...prev, created])
+        const result = await createPoder(data)
+        if (result.error) { setErr(result.error); return }
+        setPoderes((prev) => [...prev, result.data as any])
       } else if (modal) {
-        const updated = await updatePoder(modal.id, data)
+        const result = await updatePoder(modal.id, data)
+        if (result.error) { setErr(result.error); return }
+        const updated = result.data as any
         setPoderes((prev) => prev.map((p) => p.id === updated.id ? updated : p))
       }
       setModal(null)
-    } catch (e: any) { setErr(e.message ?? 'Erro desconhecido') }
-    finally { setIsPending(false) }
+    } finally { setIsPending(false) }
   }
 
   async function handleDelete(id: number) {
     if (!confirm('Deletar este poder?')) return
     setIsPending(true)
-    try { await deletePoder(id); setPoderes((prev) => prev.filter((p) => p.id !== id)) }
-    catch (e: any) { alert(e.message ?? 'Erro ao deletar') }
-    finally { setIsPending(false) }
+    try {
+      const result = await deletePoder(id)
+      if (result.error) { alert(result.error); return }
+      setPoderes((prev) => prev.filter((p) => p.id !== id))
+    } finally { setIsPending(false) }
   }
 
   const TIPOS = ['Combatente', 'Especialista', 'Geral', 'Ocultista', 'Paranormal']

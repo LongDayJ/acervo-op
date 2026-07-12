@@ -84,21 +84,22 @@ export async function deleteRitual(id: number) {
 }
 
 // ─── PODERES ─────────────────────────────────────────────────────────────────
-export async function createPoder(data: object) {
+export async function createPoder(data: object): Promise<{ data?: object; error?: string }> {
   const res = await authFetch('/poderes', 'POST', data)
-  if (!res.ok) throw new Error(await res.text())
-  return res.json()
+  if (!res.ok) return { error: await res.text() }
+  return { data: await res.json() }
 }
 
-export async function updatePoder(id: number, data: object) {
+export async function updatePoder(id: number, data: object): Promise<{ data?: object; error?: string }> {
   const res = await authFetch(`/poderes/${id}`, 'PATCH', data)
-  if (!res.ok) throw new Error(await res.text())
-  return res.json()
+  if (!res.ok) return { error: await res.text() }
+  return { data: await res.json() }
 }
 
-export async function deletePoder(id: number) {
+export async function deletePoder(id: number): Promise<{ error?: string }> {
   const res = await authFetch(`/poderes/${id}`, 'DELETE')
-  if (!res.ok) throw new Error(await res.text())
+  if (!res.ok) return { error: await res.text() }
+  return {}
 }
 
 // ─── ORIGENS ─────────────────────────────────────────────────────────────────

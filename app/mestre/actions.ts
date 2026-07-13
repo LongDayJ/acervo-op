@@ -106,6 +106,29 @@ export async function deletePoder(id: number): Promise<{ error?: string }> {
   return {}
 }
 
+// ─── TRILHAS ─────────────────────────────────────────────────────────────────
+function extractMessageTrilha(text: string): string {
+  try { return JSON.parse(text).message ?? text } catch { return text }
+}
+
+export async function createTrilha(data: object): Promise<{ data?: object; error?: string }> {
+  const res = await authFetch('/trilhas', 'POST', data)
+  if (!res.ok) return { error: extractMessageTrilha(await res.text()) }
+  return { data: await res.json() }
+}
+
+export async function updateTrilha(id: number, data: object): Promise<{ data?: object; error?: string }> {
+  const res = await authFetch(`/trilhas/${id}`, 'PATCH', data)
+  if (!res.ok) return { error: extractMessageTrilha(await res.text()) }
+  return { data: await res.json() }
+}
+
+export async function deleteTrilha(id: number): Promise<{ error?: string }> {
+  const res = await authFetch(`/trilhas/${id}`, 'DELETE')
+  if (!res.ok) return { error: extractMessageTrilha(await res.text()) }
+  return {}
+}
+
 // ─── ORIGENS ─────────────────────────────────────────────────────────────────
 export async function createOrigem(data: object) {
   const res = await authFetch('/origens', 'POST', data)

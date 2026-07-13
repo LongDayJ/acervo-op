@@ -8,6 +8,7 @@ import {
   createFonte, updateFonte, deleteFonte,
   createRitual, updateRitual, deleteRitual,
   createPoder, updatePoder, deletePoder,
+  createTrilha, updateTrilha, deleteTrilha,
   createOrigem, updateOrigem, deleteOrigem,
   createUsuario, updateUsuario, deleteUsuario,
 } from '@/app/mestre/actions'
@@ -53,6 +54,13 @@ interface Usuario {
 
 interface RoleOption { id: number; name: string; description: string | null }
 
+interface ClasseLocal { id: number; slug: string; nome: string; progressaoTipo: 'nex' | 'nivel' }
+interface TrilhaHabilidadeLocal { id?: number; progressao: number; nome: string; descricao: string }
+interface TrilhaLocal {
+  id: number; slug: string; nome: string; descricao: string
+  classe: ClasseLocal; fonte: Fonte; habilidades: TrilhaHabilidadeLocal[]
+}
+
 interface Props {
   fontes: Fonte[]
   rituais: Ritual[]
@@ -61,6 +69,8 @@ interface Props {
   elementos: Elemento[]
   usuarios: Usuario[]
   roles: RoleOption[]
+  classes: ClasseLocal[]
+  trilhas: TrilhaLocal[]
   currentUserId: number
   canManageUsers: boolean
 }
@@ -252,12 +262,13 @@ function EntityTable<T extends { id: number }>({
 
 // --- TABS --------------------------------------------------------------------
 
-type Tab = 'elementos' | 'fontes' | 'rituais' | 'poderes' | 'origens' | 'usuarios'
+type Tab = 'elementos' | 'fontes' | 'rituais' | 'poderes' | 'trilhas' | 'origens' | 'usuarios'
 const TABS: { id: Tab; label: string }[] = [
   { id: 'elementos', label: 'Elementos' },
   { id: 'fontes',    label: 'Fontes'    },
   { id: 'rituais',   label: 'Rituais'   },
   { id: 'poderes',   label: 'Poderes'   },
+  { id: 'trilhas',   label: 'Trilhas'   },
   { id: 'origens',   label: 'Origens'   },
   { id: 'usuarios',  label: 'Usuarios'  },
 ]
@@ -750,7 +761,7 @@ function PoderesTab({ poderes: initial, fontes, elementos }: { poderes: Poder[];
     } finally { setIsPending(false) }
   }
 
-  const TIPOS = ['Combatente', 'Especialista', 'Geral', 'Ocultista', 'Paranormal']
+  const TIPOS = ['Combatente', 'Especialista', 'Ocultista', 'Paranormal', 'Geral']
 
   return (
     <div className="space-y-4">
@@ -828,6 +839,186 @@ function PoderesTab({ poderes: initial, fontes, elementos }: { poderes: Poder[];
           <Field label="Requisitos">
             <TagInput tags={requisitos} onChange={setRequisitos} suggestions={reqSuggestions} placeholder="Ex: Agil, NEX 25% — Enter para adicionar" />
           </Field>
+          {err && <p className="text-xs text-rose-400">{err}</p>}
+          <div className="flex justify-end gap-2 pt-1">
+            <button onClick={() => setModal(null)} className="h-8 px-3 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">Cancelar</button>
+            <button onClick={handleSubmit} disabled={isPending} className="flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-white text-xs font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors">
+              {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Salvar
+            </button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+}
+
+// --- TRILHAS TAB -------------------------------------------------------------
+
+function nexProgressao(): number[] { return [10, 40, 65, 99] }
+function nivelProgressao(): number[] { return [2, 4] }
+
+function progressaoLabel(tipo: string, valor: number) {
+  return tipo === 'nivel' ? `Nível ${valor}` : `NEX ${valor}%`
+}
+
+function blankHabilidades(tipo: 'nex' | 'nivel'): TrilhaHabilidadeLocal[] {
+  const pts = tipo === 'nivel' ? nivelProgressao() : nexProgressao()
+  return pts.map((p) => ({ progressao: p, nome: '', descricao: '' }))
+}
+
+function TrilhasTab({ trilhas: initial, classes, fontes }: { trilhas: TrilhaLocal[]; classes: ClasseLocal[]; fontes: Fonte[] }) {
+  const [trilhas, setTrilhas] = useState(initial)
+  const [modal, setModal] = useState<'create' | TrilhaLocal | null>(null)
+  const [isPending, setIsPending] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  const blank = { nome: '', descricao: '', classeId: '', fonteId: '' }
+  const [form, setForm] = useState(blank)
+  const [habilidades, setHabilidades] = useState<TrilhaHabilidadeLocal[]>([])
+  const f = (k: keyof typeof blank) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    setForm((prev) => ({ ...prev, [k]: e.target.value }))
+
+  const classeAtual = classes.find((c) => String(c.id) === form.classeId)
+
+  function syncHabilidades(classeId: string, current: TrilhaHabilidadeLocal[]) {
+    const cls = classes.find((c) => String(c.id) === classeId)
+    if (!cls) { setHabilidades([]); return }
+    const pts = cls.progressaoTipo === 'nivel' ? nivelProgressao() : nexProgressao()
+    setHabilidades(pts.map((p) => {
+      const existing = current.find((h) => h.progressao === p)
+      return existing ?? { progressao: p, nome: '', descricao: '' }
+    }))
+  }
+
+  function handleClasseChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const classeId = e.target.value
+    setForm((prev) => ({ ...prev, classeId }))
+    syncHabilidades(classeId, habilidades)
+  }
+
+  function setHab(idx: number, field: 'nome' | 'descricao', value: string) {
+    setHabilidades((prev) => prev.map((h, i) => i === idx ? { ...h, [field]: value } : h))
+  }
+
+  function openCreate() {
+    setForm(blank)
+    setHabilidades([])
+    setModal('create')
+    setErr(null)
+  }
+
+  function openEdit(t: TrilhaLocal) {
+    setForm({ nome: t.nome, descricao: t.descricao, classeId: String(t.classe.id), fonteId: String(t.fonte.id) })
+    const cls = classes.find((c) => c.id === t.classe.id)
+    const pts = cls?.progressaoTipo === 'nivel' ? nivelProgressao() : nexProgressao()
+    setHabilidades(pts.map((p) => {
+      const existing = t.habilidades.find((h) => h.progressao === p)
+      return existing ?? { progressao: p, nome: '', descricao: '' }
+    }))
+    setModal(t)
+    setErr(null)
+  }
+
+  async function handleSubmit() {
+    setErr(null)
+    const classeId = Number(form.classeId)
+    const fonteId = Number(form.fonteId)
+    if (!form.nome.trim()) { setErr('Nome obrigatorio'); return }
+    if (!classeId) { setErr('Classe obrigatoria'); return }
+    if (!fonteId) { setErr('Fonte obrigatoria'); return }
+    const habsInvalidas = habilidades.filter((h) => !h.nome.trim())
+    if (habsInvalidas.length > 0) { setErr('Todas as habilidades precisam de nome'); return }
+    const data = {
+      nome: form.nome.trim(),
+      descricao: form.descricao.trim(),
+      classeId,
+      fonteId,
+      habilidades: habilidades.map((h) => ({
+        progressao: h.progressao,
+        nome: h.nome.trim(),
+        descricao: h.descricao.trim(),
+      })),
+    }
+    setIsPending(true)
+    try {
+      if (typeof modal === 'string') {
+        const result = await createTrilha(data)
+        if (result.error) { setErr(result.error); return }
+        setTrilhas((prev) => [...prev, result.data as any])
+      } else if (modal) {
+        const result = await updateTrilha(modal.id, data)
+        if (result.error) { setErr(result.error); return }
+        const updated = result.data as any
+        setTrilhas((prev) => prev.map((t) => t.id === updated.id ? updated : t))
+      }
+      setModal(null)
+    } finally { setIsPending(false) }
+  }
+
+  async function handleDelete(id: number) {
+    if (!confirm('Deletar esta trilha?')) return
+    setIsPending(true)
+    try {
+      const result = await deleteTrilha(id)
+      if (result.error) { alert(result.error); return }
+      setTrilhas((prev) => prev.filter((t) => t.id !== id))
+    } finally { setIsPending(false) }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{trilhas.length} trilha(s) cadastrada(s)</p>
+        <button onClick={openCreate} className="flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary/15 border border-primary/30 text-primary text-xs font-medium hover:bg-primary/25 transition-colors"><Plus className="h-3.5 w-3.5" /> Adicionar</button>
+      </div>
+      <EntityTable
+        columns={[
+          { key: 'nome',   label: 'Nome',   render: (t) => t.nome },
+          { key: 'classe', label: 'Classe',  render: (t) => <span className="text-xs text-muted-foreground">{t.classe.nome}</span> },
+          { key: 'fonte',  label: 'Fonte',   render: (t) => <span className="text-xs">{t.fonte.abreviacao ?? t.fonte.nome}</span> },
+        ]}
+        rows={trilhas} onEdit={openEdit} onDelete={handleDelete} isPending={isPending}
+      />
+      {modal !== null && (
+        <Modal title={modal === 'create' ? 'Nova Trilha' : 'Editar Trilha'} onClose={() => setModal(null)}>
+          <Field label="Nome">
+            <Input value={form.nome} onChange={f('nome')} placeholder="Ex: Aniquilador" />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Classe">
+              <Select value={form.classeId} onChange={handleClasseChange}>
+                <option value="">Selecionar...</option>
+                {classes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              </Select>
+            </Field>
+            <Field label="Fonte">
+              <Select value={form.fonteId} onChange={f('fonteId')}>
+                <option value="">Selecionar...</option>
+                {fontes.map((fn) => <option key={fn.id} value={fn.id}>{fn.nome}</option>)}
+              </Select>
+            </Field>
+          </div>
+          <Field label="Descricao">
+            <Textarea value={form.descricao} onChange={f('descricao')} placeholder="Descricao da trilha..." rows={3} />
+          </Field>
+          {habilidades.length > 0 && (
+            <div className="space-y-2 pt-1">
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Habilidades</span>
+              {habilidades.map((hab, idx) => (
+                <div key={hab.progressao} className="rounded-lg border border-border/60 bg-muted/10 p-3 space-y-2">
+                  <span className="text-[11px] font-semibold text-primary/70 uppercase tracking-wide">
+                    {progressaoLabel(classeAtual?.progressaoTipo ?? 'nex', hab.progressao)}
+                  </span>
+                  <Field label="Nome">
+                    <Input value={hab.nome} onChange={(e) => setHab(idx, 'nome', e.target.value)} placeholder="Nome da habilidade" />
+                  </Field>
+                  <Field label="Descricao (Markdown)">
+                    <Textarea value={hab.descricao} onChange={(e) => setHab(idx, 'descricao', e.target.value)} placeholder="Efeito da habilidade..." rows={3} />
+                  </Field>
+                </div>
+              ))}
+            </div>
+          )}
           {err && <p className="text-xs text-rose-400">{err}</p>}
           <div className="flex justify-end gap-2 pt-1">
             <button onClick={() => setModal(null)} className="h-8 px-3 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">Cancelar</button>
@@ -1113,7 +1304,7 @@ function UsuariosTab({ usuarios: initial, roles, currentUserId, canManageUsers }
 
 // --- MAIN --------------------------------------------------------------------
 
-export function MestrePanel({ fontes, rituais, poderes, origens, elementos, usuarios, roles, currentUserId, canManageUsers }: Props) {
+export function MestrePanel({ fontes, rituais, poderes, origens, elementos, usuarios, roles, classes, trilhas, currentUserId, canManageUsers }: Props) {
   const [tab, setTab] = useState<Tab>('rituais')
 
   const visibleTabs = TABS.filter((t) => t.id !== 'usuarios' || canManageUsers)
@@ -1139,6 +1330,7 @@ export function MestrePanel({ fontes, rituais, poderes, origens, elementos, usua
         {tab === 'fontes'    && <FontesTab fontes={fontes} />}
         {tab === 'rituais'   && <RituaisTab rituais={rituais} fontes={fontes} />}
         {tab === 'poderes'   && <PoderesTab poderes={poderes} fontes={fontes} elementos={elementos} />}
+        {tab === 'trilhas'   && <TrilhasTab trilhas={trilhas} classes={classes} fontes={fontes} />}
         {tab === 'origens'   && <OrigensTab origens={origens} fontes={fontes} />}
         {tab === 'usuarios'  && canManageUsers && <UsuariosTab usuarios={usuarios} roles={roles} currentUserId={currentUserId} canManageUsers={canManageUsers} />}
       </div>

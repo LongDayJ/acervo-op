@@ -1,4 +1,4 @@
-import type { Ritual, Origem, Poder, Elemento } from '@/lib/types'
+import type { Ritual, Origem, Poder, Elemento, Classe, Trilha } from '@/lib/types'
 
 const API = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -44,7 +44,24 @@ export function getElementosRituais(rituais: Ritual[]): string[] {
   return Array.from(set).sort()
 }
 
+const CLASSE_ORDER = ['combatente', 'especialista', 'ocultista', 'sobrevivente']
+
+export async function getClasses(): Promise<Classe[]> {
+  const classes = await apiFetch<Classe[]>('/classes')
+  return classes.sort(
+    (a, b) => CLASSE_ORDER.indexOf(a.slug) - CLASSE_ORDER.indexOf(b.slug),
+  )
+}
+
+export async function getTrilhas(): Promise<Trilha[]> {
+  return apiFetch<Trilha[]>('/trilhas')
+}
+
+const TIPO_ORDER = ['Combatente', 'Especialista', 'Ocultista', 'Paranormal', 'Geral']
+
 export function getTipos(poderes: Poder[]): string[] {
   const set = new Set(poderes.map((p) => p.tipo))
-  return Array.from(set).sort()
+  return Array.from(set).sort(
+    (a, b) => TIPO_ORDER.indexOf(a) - TIPO_ORDER.indexOf(b),
+  )
 }

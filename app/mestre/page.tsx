@@ -21,7 +21,7 @@ async function fetchAll() {
     return []
   }
 
-  const [fontes, rituais, poderes, origens, elementos, usuarios, roles] = await Promise.all([
+  const [fontes, rituais, poderes, origens, elementos, usuarios, roles, classes, trilhas] = await Promise.all([
     fetch(`${API}/fontes`,    { cache: 'no-store' }).then(safe).catch(() => []),
     fetch(`${API}/rituais`,   { cache: 'no-store' }).then(safe).catch(() => []),
     fetch(`${API}/poderes`,   { cache: 'no-store' }).then(safe).catch(() => []),
@@ -29,8 +29,10 @@ async function fetchAll() {
     fetch(`${API}/elementos`, { cache: 'no-store' }).then(safe).catch(() => []),
     fetch(`${API}/auth/users`, { cache: 'no-store', headers: authHeaders }).then((r) => safeLog(r, '/auth/users')).catch((e) => { console.error('[fetchAll] /auth/users', e); return [] }),
     fetch(`${API}/roles`,      { cache: 'no-store', headers: authHeaders }).then((r) => safeLog(r, '/roles')).catch((e) => { console.error('[fetchAll] /roles', e); return [] }),
+    fetch(`${API}/classes`,   { cache: 'no-store' }).then(safe).catch(() => []),
+    fetch(`${API}/trilhas`,   { cache: 'no-store' }).then(safe).catch(() => []),
   ])
-  return { fontes, rituais, poderes, origens, elementos, usuarios, roles }
+  return { fontes, rituais, poderes, origens, elementos, usuarios, roles, classes, trilhas }
 }
 
 export default async function MestrePage() {

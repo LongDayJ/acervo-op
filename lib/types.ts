@@ -47,6 +47,30 @@ export interface Origem {
 
 export type PoderTipo = 'Combatente' | 'Especialista' | 'Geral' | 'Ocultista' | 'Paranormal'
 
+export interface Classe {
+  id: number
+  slug: string
+  nome: string
+  progressaoTipo: 'nex' | 'nivel'
+}
+
+export interface TrilhaHabilidade {
+  id: number
+  progressao: number
+  nome: string
+  descricao: string
+}
+
+export interface Trilha {
+  id: number
+  slug: string
+  nome: string
+  descricao: string
+  classe: Classe
+  fonte: Fonte
+  habilidades: TrilhaHabilidade[]
+}
+
 export interface Poder {
   id: number
   slug: string

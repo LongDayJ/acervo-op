@@ -45,6 +45,15 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    href: '/trilhas',
+    label: 'Trilhas',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 3h7v7H3z" /><path d="M14 3h7v7h-7z" /><path d="M14 14h7v7h-7z" /><path d="M3 14h7v7H3z" />
+      </svg>
+    ),
+  },
+  {
     href: '/origens',
     label: 'Origens',
     icon: (

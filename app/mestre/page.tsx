@@ -29,7 +29,7 @@ async function fetchAll() {
     fetch(`${API}/elementos`, { cache: 'no-store' }).then(safe).catch(() => []),
     fetch(`${API}/auth/users`, { cache: 'no-store', headers: authHeaders }).then((r) => safeLog(r, '/auth/users')).catch((e) => { console.error('[fetchAll] /auth/users', e); return [] }),
     fetch(`${API}/roles`,      { cache: 'no-store', headers: authHeaders }).then((r) => safeLog(r, '/roles')).catch((e) => { console.error('[fetchAll] /roles', e); return [] }),
-    fetch(`${API}/classes`,   { cache: 'no-store' }).then(safe).catch(() => []),
+    fetch(`${API}/classes`,   { cache: 'no-store' }).then(safe).catch(() => []).then((list: any[]) => list.sort((a, b) => ['combatente','especialista','ocultista','sobrevivente'].indexOf(a.slug) - ['combatente','especialista','ocultista','sobrevivente'].indexOf(b.slug))),
     fetch(`${API}/trilhas`,   { cache: 'no-store' }).then(safe).catch(() => []),
   ])
   return { fontes, rituais, poderes, origens, elementos, usuarios, roles, classes, trilhas }

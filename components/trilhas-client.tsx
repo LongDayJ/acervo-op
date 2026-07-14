@@ -60,8 +60,22 @@ export function TrilhasClient({ classes, trilhas }: Props) {
   )
 }
 
+function renderDescricao(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground/80">$1</strong>')
+    .replace(/\n/g, '<br />')
+}
+
 function TrilhaCard({ trilha, progressaoTipo }: { trilha: Trilha; progressaoTipo: string }) {
-  const [expanded, setExpanded] = useState<number | null>(null)
+  const [collapsed, setCollapsed] = useState<Set<number>>(new Set())
+
+  function toggle(id: number) {
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -78,38 +92,40 @@ function TrilhaCard({ trilha, progressaoTipo }: { trilha: Trilha; progressaoTipo
 
       {/* Habilidades */}
       <div className="divide-y divide-border/40">
-        {trilha.habilidades.map((hab) => (
-          <div key={hab.id} className="px-4 py-2.5">
-            <button
-              className="w-full text-left"
-              onClick={() => setExpanded(expanded === hab.id ? null : hab.id)}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="shrink-0 text-[10px] font-semibold text-primary/70 uppercase tracking-wide">
-                    {progressaoLabel(progressaoTipo, hab.progressao)}
-                  </span>
-                  <span className="text-xs font-medium text-foreground truncate">{hab.nome}</span>
+        {trilha.habilidades.map((hab) => {
+          const isOpen = !collapsed.has(hab.id)
+          return (
+            <div key={hab.id} className="px-4 py-2.5">
+              <button
+                className="w-full text-left"
+                onClick={() => toggle(hab.id)}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="shrink-0 text-[10px] font-semibold text-primary/70 uppercase tracking-wide">
+                      {progressaoLabel(progressaoTipo, hab.progressao)}
+                    </span>
+                    <span className="text-xs font-medium text-foreground truncate">{hab.nome}</span>
+                  </div>
+                  <svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                    className={cn('shrink-0 w-3 h-3 text-muted-foreground/40 transition-transform', isOpen && 'rotate-180')}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
                 </div>
-                <svg
-                  viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                  className={cn('shrink-0 w-3 h-3 text-muted-foreground/40 transition-transform', expanded === hab.id && 'rotate-180')}
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </div>
-            </button>
-            {expanded === hab.id && (
-              <div className="mt-2 space-y-1.5">
-                {hab.descricao.split('\n\n').map((para, i) => (
-                  <p key={i} className="text-xs text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{
-                    __html: para.replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground/80">$1</strong>')
-                  }} />
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+              </button>
+              {isOpen && (
+                <div className="mt-2">
+                  <p
+                    className="text-xs text-muted-foreground leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: renderDescricao(hab.descricao) }}
+                  />
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

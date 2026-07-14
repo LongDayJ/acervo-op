@@ -112,6 +112,72 @@ function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   )
 }
 
+function MarkdownTextarea({ value, onChange, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+
+  function applyWrap(before: string, after: string) {
+    const el = ref.current
+    if (!el || typeof value !== 'string' || !onChange) return
+    const s = el.selectionStart
+    const e = el.selectionEnd
+    const selected = value.slice(s, e)
+    const next = value.slice(0, s) + before + selected + after + value.slice(e)
+    onChange({ target: { value: next } } as React.ChangeEvent<HTMLTextAreaElement>)
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(s + before.length, s + before.length + selected.length) })
+  }
+
+  function applyInsert(text: string) {
+    const el = ref.current
+    if (!el || typeof value !== 'string' || !onChange) return
+    const s = el.selectionStart
+    const next = value.slice(0, s) + text + value.slice(s)
+    onChange({ target: { value: next } } as React.ChangeEvent<HTMLTextAreaElement>)
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(s + text.length, s + text.length) })
+  }
+
+  const TABLE = '\n| Coluna 1 | Coluna 2 |\n|----------|----------|\n| Célula   | Célula   |\n'
+  const tools = [
+    { icon: 'N', title: 'Negrito',         cls: 'font-bold',  act: () => applyWrap('**', '**')    },
+    { icon: 'I', title: 'Itálico',         cls: 'italic',     act: () => applyWrap('*', '*')      },
+    { icon: 'S', title: 'Sublinhado',      cls: 'underline',  act: () => applyWrap('<u>', '</u>') },
+    { icon: '↵', title: 'Quebra de linha', cls: '',           act: () => applyInsert('\n')        },
+    { icon: '⊞', title: 'Tabela',          cls: '',           act: () => applyInsert(TABLE)       },
+  ]
+
+  return (
+    <div>
+      <div className="flex gap-0.5 mb-1">
+        {tools.map((t) => (
+          <button
+            key={t.title}
+            type="button"
+            title={t.title}
+            onMouseDown={(e) => { e.preventDefault(); t.act() }}
+            className={cn(
+              'h-5 min-w-[22px] px-1 rounded text-[11px] border border-border/50 bg-muted/20',
+              'text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors',
+              t.cls,
+            )}
+          >
+            {t.icon}
+          </button>
+        ))}
+      </div>
+      <textarea
+        ref={ref}
+        value={value}
+        onChange={onChange}
+        {...props}
+        className={cn(
+          'w-full px-2.5 py-2 rounded border border-border bg-background/60 text-sm text-foreground resize-none',
+          'placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/50',
+          props.className,
+        )}
+      />
+    </div>
+  )
+}
+
 function Select(props: React.SelectHTMLAttributes<HTMLSelectElement> & { children: React.ReactNode }) {
   return (
     <select
@@ -640,7 +706,7 @@ function RituaisTab({ rituais: initial, fontes }: { rituais: Ritual[]; fontes: F
             <Field label="Resistencia"><Input value={form.resistencia} onChange={f('resistencia')} placeholder="Ex: Fortitude" /></Field>
           </div>
           <Field label="Descricao">
-            <Textarea value={form.descricao} onChange={f('descricao')} placeholder="Descricao completa..." rows={4} />
+            <MarkdownTextarea value={form.descricao} onChange={f('descricao')} placeholder="Descricao completa..." rows={4} />
           </Field>
           <div className="space-y-2 pt-1">
             <div className="flex items-center justify-between">
@@ -671,7 +737,7 @@ function RituaisTab({ rituais: initial, fontes }: { rituais: Ritual[]; fontes: F
                   <TagInput tags={mod.requisitos} onChange={(reqs) => setModReqs(idx, reqs)} suggestions={modReqSuggestions} placeholder="Ex: Magia 3 — Enter para adicionar" />
                 </Field>
                 <Field label="Descricao">
-                  <Textarea value={mod.descricao} onChange={modTextField(idx, 'descricao')} placeholder="Efeito da modificacao..." rows={2} />
+                  <MarkdownTextarea value={mod.descricao} onChange={modTextField(idx, 'descricao')} placeholder="Efeito da modificacao..." rows={2} />
                 </Field>
               </div>
             ))}
@@ -829,11 +895,11 @@ function PoderesTab({ poderes: initial, fontes, elementos }: { poderes: Poder[];
             </>
           )}
           <Field label="Descricao (Markdown)">
-            <Textarea value={form.descricao} onChange={f('descricao')} placeholder="Descricao completa... **negrito** *italico*" rows={4} />
+            <MarkdownTextarea value={form.descricao} onChange={f('descricao')} placeholder="Descricao completa..." rows={4} />
           </Field>
           {form.tipo === 'Paranormal' && (
             <Field label="Afinidade (Markdown, opcional)">
-              <Textarea value={form.afinidade} onChange={f('afinidade')} placeholder="Efeito ao adquirir este poder pela segunda vez..." rows={3} />
+              <MarkdownTextarea value={form.afinidade} onChange={f('afinidade')} placeholder="Efeito ao adquirir este poder pela segunda vez..." rows={3} />
             </Field>
           )}
           <Field label="Requisitos">
@@ -999,7 +1065,7 @@ function TrilhasTab({ trilhas: initial, classes, fontes }: { trilhas: TrilhaLoca
             </Field>
           </div>
           <Field label="Descricao">
-            <Textarea value={form.descricao} onChange={f('descricao')} placeholder="Descricao da trilha..." rows={3} />
+            <MarkdownTextarea value={form.descricao} onChange={f('descricao')} placeholder="Descricao da trilha..." rows={3} />
           </Field>
           {habilidades.length > 0 && (
             <div className="space-y-2 pt-1">
@@ -1013,7 +1079,7 @@ function TrilhasTab({ trilhas: initial, classes, fontes }: { trilhas: TrilhaLoca
                     <Input value={hab.nome} onChange={(e) => setHab(idx, 'nome', e.target.value)} placeholder="Nome da habilidade" />
                   </Field>
                   <Field label="Descricao (Markdown)">
-                    <Textarea value={hab.descricao} onChange={(e) => setHab(idx, 'descricao', e.target.value)} placeholder="Efeito da habilidade..." rows={3} />
+                    <MarkdownTextarea value={hab.descricao} onChange={(e) => setHab(idx, 'descricao', e.target.value)} placeholder="Efeito da habilidade..." rows={3} />
                   </Field>
                 </div>
               ))}
@@ -1131,7 +1197,7 @@ function OrigensTab({ origens: initial, fontes }: { origens: Origem[]; fontes: F
             </Field>
           </div>
           <Field label="Descricao da Origem">
-            <Textarea value={form.descricao} onChange={f('descricao')} placeholder="Contexto e historia..." rows={3} />
+            <MarkdownTextarea value={form.descricao} onChange={f('descricao')} placeholder="Contexto e historia..." rows={3} />
           </Field>
           <Field label="Pericias Treinadas">
             <div className="grid grid-cols-4 gap-1">
@@ -1154,7 +1220,7 @@ function OrigensTab({ origens: initial, fontes }: { origens: Origem[]; fontes: F
             <Input value={form.nomeDoPoder} onChange={f('nomeDoPoder')} placeholder="Ex: Investigacao Policial" />
           </Field>
           <Field label="Poder de Origem">
-            <Textarea value={form.poderDeOrigem} onChange={f('poderDeOrigem')} placeholder="Descricao do poder..." rows={3} />
+            <MarkdownTextarea value={form.poderDeOrigem} onChange={f('poderDeOrigem')} placeholder="Descricao do poder..." rows={3} />
           </Field>
           {err && <p className="text-xs text-rose-400">{err}</p>}
           <div className="flex justify-end gap-2 pt-1">

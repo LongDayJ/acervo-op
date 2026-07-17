@@ -405,24 +405,26 @@ function ElementosTab({ elementos: initial }: { elementos: Elemento[] }) {
     setErr(null)
     if (!form.nome.trim()) { setErr('Nome obrigatorio'); return }
     start(async () => {
-      try {
-        if (typeof modal === 'string') {
-          const created = await createElemento({ nome: form.nome.trim(), cor: form.cor })
-          setElementos((prev) => [...prev, created])
-        } else if (modal) {
-          const updated = await updateElemento(modal.id, { nome: form.nome.trim(), cor: form.cor })
-          setElementos((prev) => prev.map((el) => el.id === updated.id ? updated : el))
-        }
-        setModal(null)
-      } catch (e: any) { setErr(e.message ?? 'Erro desconhecido') }
+      if (typeof modal === 'string') {
+        const result = await createElemento({ nome: form.nome.trim(), cor: form.cor })
+        if (result.error) { setErr(result.error); return }
+        setElementos((prev) => [...prev, result.data as Elemento])
+      } else if (modal) {
+        const result = await updateElemento(modal.id, { nome: form.nome.trim(), cor: form.cor })
+        if (result.error) { setErr(result.error); return }
+        const updated = result.data as Elemento
+        setElementos((prev) => prev.map((el) => el.id === updated.id ? updated : el))
+      }
+      setModal(null)
     })
   }
 
   function handleDelete(id: number) {
     if (!confirm('Deletar este elemento? Poderes vinculados perderao o elemento.')) return
     start(async () => {
-      try { await deleteElemento(id); setElementos((prev) => prev.filter((el) => el.id !== id)) }
-      catch (e: any) { alert(e.message ?? 'Erro ao deletar') }
+      const result = await deleteElemento(id)
+      if (result.error) { alert(result.error); return }
+      setElementos((prev) => prev.filter((el) => el.id !== id))
     })
   }
 
@@ -488,24 +490,26 @@ function FontesTab({ fontes: initial }: { fontes: Fonte[] }) {
     const data = { nome: nome.trim(), abreviacao: abreviacao.trim() || undefined }
     if (!data.nome) { setErr('Nome obrigatorio'); return }
     start(async () => {
-      try {
-        if (typeof modal === 'string') {
-          const created = await createFonte(data)
-          setFontes((prev) => [...prev, created].sort((a, b) => a.nome.localeCompare(b.nome)))
-        } else if (modal) {
-          const updated = await updateFonte(modal.id, data)
-          setFontes((prev) => prev.map((f) => f.id === updated.id ? updated : f))
-        }
-        setModal(null)
-      } catch (e: any) { setErr(e.message ?? 'Erro desconhecido') }
+      if (typeof modal === 'string') {
+        const result = await createFonte(data)
+        if (result.error) { setErr(result.error); return }
+        setFontes((prev) => [...prev, result.data as Fonte].sort((a, b) => a.nome.localeCompare(b.nome)))
+      } else if (modal) {
+        const result = await updateFonte(modal.id, data)
+        if (result.error) { setErr(result.error); return }
+        const updated = result.data as Fonte
+        setFontes((prev) => prev.map((f) => f.id === updated.id ? updated : f))
+      }
+      setModal(null)
     })
   }
 
   function handleDelete(id: number) {
     if (!confirm('Deletar esta fonte?')) return
     start(async () => {
-      try { await deleteFonte(id); setFontes((prev) => prev.filter((f) => f.id !== id)) }
-      catch (e: any) { alert(e.message ?? 'Erro ao deletar') }
+      const result = await deleteFonte(id)
+      if (result.error) { alert(result.error); return }
+      setFontes((prev) => prev.filter((f) => f.id !== id))
     })
   }
 
@@ -613,24 +617,26 @@ function RituaisTab({ rituais: initial, fontes }: { rituais: Ritual[]; fontes: F
     if (!data.nome) { setErr('Nome obrigatorio'); return }
     if (!data.fonteId) { setErr('Fonte obrigatoria'); return }
     start(async () => {
-      try {
-        if (typeof modal === 'string') {
-          const created = await createRitual(data)
-          setRituais((prev) => [...prev, created])
-        } else if (modal) {
-          const updated = await updateRitual(modal.id, data)
-          setRituais((prev) => prev.map((r) => r.id === updated.id ? updated : r))
-        }
-        setModal(null)
-      } catch (e: any) { setErr(e.message ?? 'Erro desconhecido') }
+      if (typeof modal === 'string') {
+        const result = await createRitual(data)
+        if (result.error) { setErr(result.error); return }
+        setRituais((prev) => [...prev, result.data as Ritual])
+      } else if (modal) {
+        const result = await updateRitual(modal.id, data)
+        if (result.error) { setErr(result.error); return }
+        const updated = result.data as Ritual
+        setRituais((prev) => prev.map((r) => r.id === updated.id ? updated : r))
+      }
+      setModal(null)
     })
   }
 
   function handleDelete(id: number) {
     if (!confirm('Deletar este ritual?')) return
     start(async () => {
-      try { await deleteRitual(id); setRituais((prev) => prev.filter((r) => r.id !== id)) }
-      catch (e: any) { alert(e.message ?? 'Erro ao deletar') }
+      const result = await deleteRitual(id)
+      if (result.error) { alert(result.error); return }
+      setRituais((prev) => prev.filter((r) => r.id !== id))
     })
   }
 
@@ -1150,24 +1156,26 @@ function OrigensTab({ origens: initial, fontes }: { origens: Origem[]; fontes: F
     if (!data.nome) { setErr('Nome obrigatorio'); return }
     if (!data.fonteId) { setErr('Fonte obrigatoria'); return }
     start(async () => {
-      try {
-        if (typeof modal === 'string') {
-          const created = await createOrigem(data)
-          setOrigens((prev) => [...prev, created])
-        } else if (modal) {
-          const updated = await updateOrigem(modal.id, data)
-          setOrigens((prev) => prev.map((o) => o.id === updated.id ? updated : o))
-        }
-        setModal(null)
-      } catch (e: any) { setErr(e.message ?? 'Erro desconhecido') }
+      if (typeof modal === 'string') {
+        const result = await createOrigem(data)
+        if (result.error) { setErr(result.error); return }
+        setOrigens((prev) => [...prev, result.data as Origem])
+      } else if (modal) {
+        const result = await updateOrigem(modal.id, data)
+        if (result.error) { setErr(result.error); return }
+        const updated = result.data as Origem
+        setOrigens((prev) => prev.map((o) => o.id === updated.id ? updated : o))
+      }
+      setModal(null)
     })
   }
 
   function handleDelete(id: number) {
     if (!confirm('Deletar esta origem?')) return
     start(async () => {
-      try { await deleteOrigem(id); setOrigens((prev) => prev.filter((o) => o.id !== id)) }
-      catch (e: any) { alert(e.message ?? 'Erro ao deletar') }
+      const result = await deleteOrigem(id)
+      if (result.error) { alert(result.error); return }
+      setOrigens((prev) => prev.filter((o) => o.id !== id))
     })
   }
 

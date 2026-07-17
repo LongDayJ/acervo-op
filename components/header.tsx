@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { logoutAction } from '@/actions/auth'
 import { LoginModal } from '@/components/login-modal'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { cn } from '@/lib/utils'
 import type { Session } from '@/lib/session'
 
@@ -40,7 +41,7 @@ export function Header({ user }: HeaderProps) {
         aria-label="Compendio de Ordem Paranormal - inicio"
         className="flex items-center gap-2.5 no-underline shrink-0"
       >
-        <div className="w-7 h-7 rounded-[6px] bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 [&_svg]:text-[#a490c2]">
+        <div className="w-7 h-7 rounded-[6px] bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5 [&_svg]:text-primary">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
             <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
@@ -58,12 +59,13 @@ export function Header({ user }: HeaderProps) {
 
       {/* Right area */}
       <div className="flex items-center gap-2 shrink-0">
+        <ThemeToggle />
         {user ? (
           <div ref={wrapperRef} className="relative">
             <button
               onClick={() => setOpen((v) => !v)}
               aria-label="Menu do usuario"
-              className="w-[30px] h-[30px] rounded-full bg-primary/25 border border-border/30 text-[#a490c2] text-[11px] font-bold tracking-[0.02em] cursor-pointer flex items-center justify-center transition-colors hover:bg-primary/15 hover:border-primary/60"
+              className="w-[30px] h-[30px] rounded-full bg-primary/25 border border-border/30 text-primary text-[11px] font-bold tracking-[0.02em] cursor-pointer flex items-center justify-center transition-colors hover:bg-primary/15 hover:border-primary/60"
             >
               {getInitials(user.name)}
             </button>
@@ -78,7 +80,7 @@ export function Header({ user }: HeaderProps) {
                   <div className="text-[11px] text-muted-foreground mt-0.5">
                     {user.email}
                   </div>
-                  <div className="inline-block mt-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] px-1.5 py-0.5 rounded bg-primary/15 text-[#a490c2]">
+                  <div className="inline-block mt-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] px-1.5 py-0.5 rounded bg-primary/15 text-primary">
                     {user.isAdmin ? 'Mestre' : 'Jogador'}
                   </div>
                 </div>

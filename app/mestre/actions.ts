@@ -1,7 +1,6 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { revalidatePath } from 'next/cache'
 
 const API = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -20,74 +19,68 @@ async function authFetch(path: string, method: string, body?: object) {
   return res
 }
 
-// ─── ELEMENTOS ───────────────────────────────────────────────────────────────
-export async function createElemento(data: { nome: string; cor?: string }) {
-  const res = await authFetch('/elementos', 'POST', data)
-  if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
-  return res.json()
-}
-
-export async function updateElemento(id: number, data: { nome?: string; cor?: string }) {
-  const res = await authFetch(`/elementos/${id}`, 'PATCH', data)
-  if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
-  return res.json()
-}
-
-export async function deleteElemento(id: number) {
-  const res = await authFetch(`/elementos/${id}`, 'DELETE')
-  if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
-}
-
-// ─── FONTES ──────────────────────────────────────────────────────────────────
-export async function createFonte(data: { nome: string; abreviacao?: string }) {
-  const res = await authFetch('/fontes', 'POST', data)
-  if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
-  return res.json()
-}
-
-export async function updateFonte(id: number, data: { nome?: string; abreviacao?: string }) {
-  const res = await authFetch(`/fontes/${id}`, 'PATCH', data)
-  if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
-  return res.json()
-}
-
-export async function deleteFonte(id: number) {
-  const res = await authFetch(`/fontes/${id}`, 'DELETE')
-  if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
-}
-
-// ─── RITUAIS ─────────────────────────────────────────────────────────────────
-export async function createRitual(data: object) {
-  const res = await authFetch('/rituais', 'POST', data)
-  if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
-  return res.json()
-}
-
-export async function updateRitual(id: number, data: object) {
-  const res = await authFetch(`/rituais/${id}`, 'PATCH', data)
-  if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
-  return res.json()
-}
-
-export async function deleteRitual(id: number) {
-  const res = await authFetch(`/rituais/${id}`, 'DELETE')
-  if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
-}
-
-// ─── PODERES ─────────────────────────────────────────────────────────────────
 function extractMessage(text: string): string {
   try { return JSON.parse(text).message ?? text } catch { return text }
 }
 
+// ─── ELEMENTOS ───────────────────────────────────────────────────────────────
+export async function createElemento(data: { nome: string; cor?: string }): Promise<{ data?: object; error?: string }> {
+  const res = await authFetch('/elementos', 'POST', data)
+  if (!res.ok) return { error: extractMessage(await res.text()) }
+  return { data: await res.json() }
+}
+
+export async function updateElemento(id: number, data: { nome?: string; cor?: string }): Promise<{ data?: object; error?: string }> {
+  const res = await authFetch(`/elementos/${id}`, 'PATCH', data)
+  if (!res.ok) return { error: extractMessage(await res.text()) }
+  return { data: await res.json() }
+}
+
+export async function deleteElemento(id: number): Promise<{ error?: string }> {
+  const res = await authFetch(`/elementos/${id}`, 'DELETE')
+  if (!res.ok) return { error: extractMessage(await res.text()) }
+  return {}
+}
+
+// ─── FONTES ──────────────────────────────────────────────────────────────────
+export async function createFonte(data: { nome: string; abreviacao?: string }): Promise<{ data?: object; error?: string }> {
+  const res = await authFetch('/fontes', 'POST', data)
+  if (!res.ok) return { error: extractMessage(await res.text()) }
+  return { data: await res.json() }
+}
+
+export async function updateFonte(id: number, data: { nome?: string; abreviacao?: string }): Promise<{ data?: object; error?: string }> {
+  const res = await authFetch(`/fontes/${id}`, 'PATCH', data)
+  if (!res.ok) return { error: extractMessage(await res.text()) }
+  return { data: await res.json() }
+}
+
+export async function deleteFonte(id: number): Promise<{ error?: string }> {
+  const res = await authFetch(`/fontes/${id}`, 'DELETE')
+  if (!res.ok) return { error: extractMessage(await res.text()) }
+  return {}
+}
+
+// ─── RITUAIS ─────────────────────────────────────────────────────────────────
+export async function createRitual(data: object): Promise<{ data?: object; error?: string }> {
+  const res = await authFetch('/rituais', 'POST', data)
+  if (!res.ok) return { error: extractMessage(await res.text()) }
+  return { data: await res.json() }
+}
+
+export async function updateRitual(id: number, data: object): Promise<{ data?: object; error?: string }> {
+  const res = await authFetch(`/rituais/${id}`, 'PATCH', data)
+  if (!res.ok) return { error: extractMessage(await res.text()) }
+  return { data: await res.json() }
+}
+
+export async function deleteRitual(id: number): Promise<{ error?: string }> {
+  const res = await authFetch(`/rituais/${id}`, 'DELETE')
+  if (!res.ok) return { error: extractMessage(await res.text()) }
+  return {}
+}
+
+// ─── PODERES ─────────────────────────────────────────────────────────────────
 export async function createPoder(data: object): Promise<{ data?: object; error?: string }> {
   const res = await authFetch('/poderes', 'POST', data)
   if (!res.ok) return { error: extractMessage(await res.text()) }
@@ -107,47 +100,41 @@ export async function deletePoder(id: number): Promise<{ error?: string }> {
 }
 
 // ─── TRILHAS ─────────────────────────────────────────────────────────────────
-function extractMessageTrilha(text: string): string {
-  try { return JSON.parse(text).message ?? text } catch { return text }
-}
-
 export async function createTrilha(data: object): Promise<{ data?: object; error?: string }> {
   const res = await authFetch('/trilhas', 'POST', data)
-  if (!res.ok) return { error: extractMessageTrilha(await res.text()) }
+  if (!res.ok) return { error: extractMessage(await res.text()) }
   return { data: await res.json() }
 }
 
 export async function updateTrilha(id: number, data: object): Promise<{ data?: object; error?: string }> {
   const res = await authFetch(`/trilhas/${id}`, 'PATCH', data)
-  if (!res.ok) return { error: extractMessageTrilha(await res.text()) }
+  if (!res.ok) return { error: extractMessage(await res.text()) }
   return { data: await res.json() }
 }
 
 export async function deleteTrilha(id: number): Promise<{ error?: string }> {
   const res = await authFetch(`/trilhas/${id}`, 'DELETE')
-  if (!res.ok) return { error: extractMessageTrilha(await res.text()) }
+  if (!res.ok) return { error: extractMessage(await res.text()) }
   return {}
 }
 
 // ─── ORIGENS ─────────────────────────────────────────────────────────────────
-export async function createOrigem(data: object) {
+export async function createOrigem(data: object): Promise<{ data?: object; error?: string }> {
   const res = await authFetch('/origens', 'POST', data)
-  if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
-  return res.json()
+  if (!res.ok) return { error: extractMessage(await res.text()) }
+  return { data: await res.json() }
 }
 
-export async function updateOrigem(id: number, data: object) {
+export async function updateOrigem(id: number, data: object): Promise<{ data?: object; error?: string }> {
   const res = await authFetch(`/origens/${id}`, 'PATCH', data)
-  if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
-  return res.json()
+  if (!res.ok) return { error: extractMessage(await res.text()) }
+  return { data: await res.json() }
 }
 
-export async function deleteOrigem(id: number) {
+export async function deleteOrigem(id: number): Promise<{ error?: string }> {
   const res = await authFetch(`/origens/${id}`, 'DELETE')
-  if (!res.ok) throw new Error(await res.text())
-  revalidatePath('/mestre')
+  if (!res.ok) return { error: extractMessage(await res.text()) }
+  return {}
 }
 
 // ─── USUARIOS ────────────────────────────────────────────────────────────────

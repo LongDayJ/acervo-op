@@ -67,6 +67,7 @@ function renderDescricao(text: string): string {
 }
 
 function TrilhaCard({ trilha, progressaoTipo }: { trilha: Trilha; progressaoTipo: string }) {
+  const [cardOpen, setCardOpen] = useState(true)
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set())
 
   function toggle(id: number) {
@@ -80,53 +81,68 @@ function TrilhaCard({ trilha, progressaoTipo }: { trilha: Trilha; progressaoTipo
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden">
       {/* Cabeçalho da trilha */}
-      <div className="px-4 pt-4 pb-3 border-b border-border/50">
+      <button
+        className="w-full text-left px-4 pt-4 pb-3 border-b border-border/50 hover:bg-muted/10 transition-colors"
+        onClick={() => setCardOpen((v) => !v)}
+      >
         <div className="flex items-start justify-between gap-2">
           <h2 className="text-sm font-bold text-foreground">{trilha.nome}</h2>
-          <span className="shrink-0 text-[10px] text-muted-foreground/60 font-medium mt-0.5">
-            {trilha.fonte.abreviacao ?? trilha.fonte.nome}
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] text-muted-foreground/60 font-medium mt-0.5">
+              {trilha.fonte.abreviacao ?? trilha.fonte.nome}
+            </span>
+            <svg
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              className={cn('w-3 h-3 text-muted-foreground/40 transition-transform mt-0.5', cardOpen && 'rotate-180')}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{trilha.descricao}</p>
-      </div>
+        {cardOpen && (
+          <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{trilha.descricao}</p>
+        )}
+      </button>
 
       {/* Habilidades */}
-      <div className="divide-y divide-border/40">
-        {trilha.habilidades.map((hab) => {
-          const isOpen = !collapsed.has(hab.id)
-          return (
-            <div key={hab.id} className="px-4 py-2.5">
-              <button
-                className="w-full text-left"
-                onClick={() => toggle(hab.id)}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="shrink-0 text-[10px] font-semibold text-primary/70 uppercase tracking-wide">
-                      {progressaoLabel(progressaoTipo, hab.progressao)}
-                    </span>
-                    <span className="text-xs font-medium text-foreground truncate">{hab.nome}</span>
+      {cardOpen && (
+        <div className="divide-y divide-border/40">
+          {trilha.habilidades.map((hab) => {
+            const isOpen = !collapsed.has(hab.id)
+            return (
+              <div key={hab.id} className="px-4 py-2.5">
+                <button
+                  className="w-full text-left"
+                  onClick={() => toggle(hab.id)}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="shrink-0 text-[10px] font-semibold text-primary/70 uppercase tracking-wide">
+                        {progressaoLabel(progressaoTipo, hab.progressao)}
+                      </span>
+                      <span className="text-xs font-medium text-foreground truncate">{hab.nome}</span>
+                    </div>
+                    <svg
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                      className={cn('shrink-0 w-3 h-3 text-muted-foreground/40 transition-transform', isOpen && 'rotate-180')}
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
                   </div>
-                  <svg
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                    className={cn('shrink-0 w-3 h-3 text-muted-foreground/40 transition-transform', isOpen && 'rotate-180')}
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </div>
-              </button>
-              {isOpen && (
-                <div className="mt-2">
-                  <p
-                    className="text-xs text-muted-foreground leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: renderDescricao(hab.descricao) }}
-                  />
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+                </button>
+                {isOpen && (
+                  <div className="mt-2">
+                    <p
+                      className="text-xs text-muted-foreground leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: renderDescricao(hab.descricao) }}
+                    />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

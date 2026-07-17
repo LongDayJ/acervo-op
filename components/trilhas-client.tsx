@@ -100,7 +100,10 @@ function TrilhaCard({ trilha, progressaoTipo }: { trilha: Trilha; progressaoTipo
           </div>
         </div>
         {cardOpen && (
-          <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{trilha.descricao}</p>
+          <p
+            className="text-xs text-muted-foreground mt-1.5 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: renderDescricao(trilha.descricao) }}
+          />
         )}
       </button>
 
